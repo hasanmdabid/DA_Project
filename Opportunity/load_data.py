@@ -6,7 +6,7 @@ import pickle
 
 def load_data(x):
     import pandas as pd
-    x = pd.read_csv(f'~/Documents/DA_Project/OPPORTUNITY/Data/{x}.csv',dtype='float32')
+    x = pd.read_csv(f'~/Documents/DA_Project/Opportunity/Data/{x}.csv',dtype='float32')
     x = x.fillna(method='ffill')  # Replacing the 'Nan' values with 0 in the dataset
     # x = x[(~x.astype('bool')).mean(axis=1) < 0.10]  # Dropping any rows that contains 90% of its overall column values is equal to 0
     return x

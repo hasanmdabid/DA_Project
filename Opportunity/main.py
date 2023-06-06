@@ -9,7 +9,7 @@ import gc
 
 import numpy as np
 import tensorflow as tf
-from keras.utils import to_categorical
+from tensorflow.keras.utils import to_categorical
 from sklearn.metrics import f1_score
 import train_test_split
 import nn_models
