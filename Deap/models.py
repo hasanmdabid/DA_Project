@@ -12,14 +12,10 @@ from keras.layers import LSTM, Lambda, Reshape
 from sklearn.model_selection import GridSearchCV
 from scikeras.wrappers import KerasClassifier
 from sklearn.model_selection import KFold
+from keras.callbacks import ModelCheckpoint
 
-# Diclaring the Global variable.
-
-global n_timesteps, n_features
-
-def conv1D(activation='relu', init_mode='uniform', optimizer='rmsprop', dropout_rate=0.6):
+def conv1D(activation, init_mode, optimizer, dropout_rate, n_timesteps, n_features, n_outputs):
     model = Sequential()
-    model.add(BatchNormalization(input_shape=(n_timesteps, n_features)))
     model.add(Conv1D(filters=64, kernel_size=3, activation=activation, kernel_initializer=init_mode, input_shape=(n_timesteps, n_features)))
     model.add(Dropout(dropout_rate))
 
@@ -41,32 +37,27 @@ def conv1D(activation='relu', init_mode='uniform', optimizer='rmsprop', dropout_
     model.add(Dense(32, kernel_initializer=init_mode, activation=activation))
     model.add(Dense(1, kernel_initializer=init_mode, activation='sigmoid'))
     # Compiling The model
-    model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+    model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'],)
 
     return model
 
-def conv2D(activation='relu', init_mode='glorot_uniform', optimizer='Adam', dropout_rate=0.6):
+def conv2D(activation, init_mode, optimizer, dropout_rate, n_timesteps, n_features, n_outputs):
     model = Sequential()
     # Adding Batch normalization before CONV
     # model.add(BatchNormalization(input_shape=(n_timesteps, n_features, 1)))
 
     # 1st convolutional + pooling
-    model.add(Conv2D(filters=256, kernel_size=(3, 1), activation=activation, kernel_initializer=init_mode, input_shape=(n_timesteps, n_features, 1)))
+    model.add(Conv2D(filters=64, kernel_size=(3, 1), activation=activation, kernel_initializer=init_mode, input_shape=(n_timesteps, n_features, n_outputs)))
     model.add(MaxPooling2D(pool_size=(2, 1), strides=None, padding="valid"))
     model.add(Dropout(dropout_rate))
 
     # 2nd convolutional + pooling + normalization layer
-    model.add(Conv2D(filters=128, kernel_size=(3, 1), activation=activation, kernel_initializer=init_mode))
-    model.add(MaxPooling2D(pool_size=(2, 1), strides=None, padding="valid"))
-    model.add(Dropout(dropout_rate))
-
-    # 3rd block: convolutional + RELU + normalization
-    model.add(Conv2D(filters=64, kernel_size=(3, 1), activation=activation, kernel_initializer=init_mode))
+    model.add(Conv2D(filters=32, kernel_size=(3, 1), activation=activation, kernel_initializer=init_mode))
     model.add(MaxPooling2D(pool_size=(2, 1), strides=None, padding="valid"))
     model.add(Dropout(dropout_rate))
 
     # 4th block: convolutional + RELU + normalization
-    model.add(Conv2D(filters=32, kernel_size=(3, 1), activation=activation, kernel_initializer=init_mode))
+    model.add(Conv2D(filters=16, kernel_size=(3, 1), activation=activation, kernel_initializer=init_mode))
     model.add(MaxPooling2D(pool_size=(2, 1), strides=None, padding="valid"))
     model.add(Dropout(dropout_rate))
 
@@ -83,7 +74,8 @@ def conv2D(activation='relu', init_mode='glorot_uniform', optimizer='Adam', drop
     return model
 
 
-def deepconvlstm(activation='relu', init_mode='glorot_uniform', optimizer='Adam', dropout_rate=0.2):
+
+def deepconvlstm(activation, init_mode, optimizer, dropout_rate, n_timesteps, n_features, n_outputs):
     # First adding the Batch Normalization layer.
     def ReshapeLayer(x):
         shape = x.shape
@@ -138,7 +130,7 @@ def deepconvlstm(activation='relu', init_mode='glorot_uniform', optimizer='Adam'
 
     return model
 
-def lstm(dropout_rate=0.2):
+def lstm(dropout_rate, n_timesteps, n_features, n_outputs):
     model=Sequential()
     model.add(LSTM(64, activation='tanh', return_sequences=True, input_shape=(n_timesteps, n_features)))
     model.add(Dropout(dropout_rate))

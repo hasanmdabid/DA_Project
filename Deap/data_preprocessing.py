@@ -1,10 +1,12 @@
-def data_pre():
+def data_pre_pro_without_scalling():
     import pickle
-    import matplotlib
     import pandas as pd
     import numpy as np
     import matplotlib.pyplot as plt
-    from sklearn.preprocessing import StandardScaler, MinMaxScaler
+    from sklearn.preprocessing import StandardScaler 
+    import os.path
+    from pathlib import Path
+    import seg_TSAUG 
 
     # ----------------------------------------------------------Loading the Data---------------------------------------------
     # The EEG and peripheral physiological signals of 32 participants were recorded as each watched 40 music videos.
@@ -36,10 +38,18 @@ def data_pre():
     data = []
 
     for i in files:
-        filename = "/home/abidhasan/Documents/DA_Project/Deap/data/s" + i + ".dat"
+        filename = "/home/abidhasan/Documents/DA_Project/Deap/Data/Data/s" + i + ".dat"
         trial = read_eeg_signal_from_file(filename)
         labels.append(trial['labels'])
         data.append(trial['data'])
+    
+    
+    path = './Deap/picture/'
+    if not os.path.exists(path):
+        os.makedirs(path)
+    
+    save_picture_to = path
+    
 
     # Re-shape arrays into desired shapes
     labels = np.array(labels)
@@ -101,8 +111,11 @@ def data_pre():
     axs[1].set_ylim(1, 9)
     axs[1].boxplot([df_hahv['Arousal'], df_lahv['Arousal'], df_halv['Arousal'], df_lalv['Arousal']],
                    labels=['HAHV', 'LAHV', 'HALV', 'LALV'])
+    
+    
 
-    plt.savefig('Valance and Arousal between groups.png')
+
+    plt.savefig(save_picture_to + 'Valance and Arousal between groups.png', dpi = 500)
 
     # Valence and Arousal ratings per group
     fig, axs = plt.subplots(2, 2, figsize=(12, 8))
@@ -126,7 +139,7 @@ def data_pre():
     axs[1, 1].set_ylim(1, 9)
     axs[1, 1].boxplot([df_lalv['Valence'], df_lalv['Arousal']],
                       labels=['Valence', 'Arousal'])
-    plt.savefig('Valence and arousal rating per group.png')
+    plt.savefig(save_picture_to+'Valence and arousal rating per group.png', dpi=500)
 
     # ----------------One hot encoding----------------------------
 
@@ -263,14 +276,13 @@ def data_pre():
 
         segment_idx = 0  # Index for the segment dimension
         nb_segments, nb_timestamps, nb_columns = x.shape
-        data_to_save = np.zeros(
-            (nb_segments, nb_timestamps, nb_columns - 1), dtype=np.float32)
+        data_to_save = np.zeros((nb_segments, nb_timestamps, nb_columns - 1), dtype=np.float32)
         labels_to_save = np.zeros(nb_segments, dtype=int)
 
         for i in range(0, nb_segments):
             labels = x[i][:][:]
             data_to_save[i] = labels[:, :-1]
-            labels = x[i][:][:]
+            #labels = x[i][:][:]
             labels = labels[:, -1]
             # Convert labels to int to avoid typing issues
             labels = labels.astype('int')
@@ -278,6 +290,7 @@ def data_pre():
             labels_to_save[i] = values[np.argmax(counts)]
 
         return data_to_save, labels_to_save
+    
 
     eeg_valence_slided, valence_slided = slided_numpy_array(eeg_valence)
     eeg_arousal_slided, arousal_slided = slided_numpy_array(eeg_arousal)

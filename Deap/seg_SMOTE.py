@@ -8,7 +8,6 @@ def seg_SMOTE():
     import pickle
     from sklearn.preprocessing import StandardScaler, MinMaxScaler
     from imblearn.over_sampling import SMOTE, BorderlineSMOTE
-    from sklearn.model_selection import train_test_split
 
     # ----------------------------------------------------------Loading the Data---------------------------------------------
     # The EEG and peripheral physiological signals of 32 participants were recorded as each watched 40 music videos.
@@ -41,7 +40,7 @@ def seg_SMOTE():
     data = []
 
     for i in files:
-        filename = "/home/abidhasan/Documents/DEAP/data/s" + i + ".dat"
+        filename = r"C:\Users\abid1\PycharmProjects\DEAP\data\s"+ i +".dat"
         trial = read_eeg_signal_from_file(filename)
         labels.append(trial['labels'])
         data.append(trial['data'])
@@ -61,10 +60,10 @@ def seg_SMOTE():
     print("Raw Labels: ", labels.shape)  # trial x label
     print("RawData: ", data.shape)  # trial x channel x data
 
-
     # ----------------One hot encoding----------------------------
 
     # Function to check if each trial has positive or negative valence
+
     def positive_valence(trial):
         return 1 if labels[trial, 0] >= np.median(labels[:, 0]) else 0
 
@@ -104,8 +103,8 @@ def seg_SMOTE():
     print(x.shape)
     print(x)
     """
-    # Converting the labels into total number of time stamp
-    valence = np.repeat(np.array(df_valence), 8064, axis=0)
+    valence = np.repeat(np.array(df_valence), 8064,
+                        axis=0)  # Converting the labels into total number of time stamp
     # Converting the labels into total number of time stamp
     arousal = np.repeat(np.array(df_arousal), 8064, axis=0)
 
@@ -135,7 +134,8 @@ def seg_SMOTE():
     for i in range(len(data)):
         for j in range(32, len(data[0])):
             peripheral_data.append(data[i, j])
-    peripheral_data = np.reshape(peripheral_data, (len(data), len(peripheral_channels), len(data[0, 0])))
+    peripheral_data = np.reshape(peripheral_data, (len(
+        data), len(peripheral_channels), len(data[0, 0])))
     # print('Shappe of Peripheral data', peripheral_data.shape)
 
     # Converting the data into (Samples, row, column) form.
@@ -152,34 +152,33 @@ def seg_SMOTE():
     # data set. SO we will select the time stamp 5 sec (640 samples per segment).
     # 1st we will convert the 3D data into 2D data.
 
-    eeg_data = eeg_data.reshape(eeg_data.shape[0] * eeg_data.shape[1], eeg_data.shape[2])
-    peripheral_data = peripheral_data.reshape(peripheral_data.shape[0] * peripheral_data.shape[1], peripheral_data.shape[2])
+    eeg_data = eeg_data.reshape(
+        eeg_data.shape[0] * eeg_data.shape[1], eeg_data.shape[2])
+    peripheral_data = peripheral_data.reshape(
+        peripheral_data.shape[0] * peripheral_data.shape[1], peripheral_data.shape[2])
     # print('EEG data in 2D', eeg_data.shape)
     # print('Peripheral data in 2D', peripheral_data.shape)
 
     x = np.hstack((eeg_data, peripheral_data))
-    
-    x_val, x_unused, valence, valence_unused = train_test_split(x, valence, test_size=0.95, random_state=100)
-    x_aro, x_unused, arousal, arousal_unused = train_test_split(x, arousal, test_size=0.95, random_state=100)
 
-    print('After reducing the sape of x_val:', x_val.shape)
-    print('After reducing the sape of x_aro:', x_aro.shape)
-    
+    print('Combined data x:', x.shape)
 
     # counter = Counter(y)
     print('Original dataset shape of valence %s' % Counter(valence))
     print('Original dataset shape of Arousal %s' % Counter(arousal))
 
-    oversample = SMOTE(random_state=10)
+    oversample = SMOTE(random_state=1)
 
-    X_val, y_val = oversample.fit_resample(x_val, valence)
-    X_aro, y_aro = oversample.fit_resample(x_aro, arousal)
+    X_val, y_val = oversample.fit_resample(x, valence)
+    X_aro, y_aro = oversample.fit_resample(x, arousal)
 
     print('Resampled dataset shape_Valence %s' % Counter(y_val))
-    print('Resampled dataset shape_Arousal %s' % Counter(y_aro))
+    #print('Resampled dataset shape_Arousal %s' % Counter(y_aro))
 
-    combined_data_valence = np.append(X_val, y_val.reshape(y_val.shape[0], 1), axis=1)
-    combined_data_arousal = np.append(X_aro, y_aro.reshape(y_aro.shape[0], 1), axis=1)
+    combined_data_valence = np.append(
+        X_val, y_val.reshape(valence.shape[0], 1), axis=1)
+    combined_data_arousal = np.append(
+        X_aro, y_aro.reshape(arousal.shape[0], 1), axis=1)
 
     # This function will generate the slided Windowed Data
     def slided_numpy_array(data):
@@ -216,19 +215,30 @@ def seg_SMOTE():
 
         return data_to_save, labels_to_save
 
-    combined_data_valence_slided, combined_valence_slided = slided_numpy_array(combined_data_valence)
-    combined_data_arousal_slided, combined_arousal_slided = slided_numpy_array(combined_data_arousal)
+    combined_data_valence_slided, valence_slided = slided_numpy_array(
+        combined_data_valence)
+    combined_data_arousal_slided, arousal_slided = slided_numpy_array(
+        combined_data_arousal)
 
     print('After sliding-window 3D data', combined_data_valence_slided.shape)
-    print('After sliding-window valance labels', combined_valence_slided.shape)
-    unique_valence, counts_valence = np.unique(combined_valence_slided, return_counts=True)
+    print('After sliding-window valance labels', valence_slided.shape)
+    unique_valence, counts_valence = np.unique(
+        valence_slided, return_counts=True)
     print(np.asarray((unique_valence, counts_valence)).T)
-    
-    
-    print('After sliding-window 3D data', combined_data_arousal_slided.shape)
-    print('After sliding-window arousal labels', combined_arousal_slided.shape)
-    unique_arousal, counts_arousal = np.unique(combined_arousal_slided, return_counts=True)
-    print(np.asarray((unique_arousal, counts_arousal)).T)
-    
-    return combined_data_valence_slided, combined_valence_slided, combined_data_arousal_slided, combined_arousal_slided
 
+    print('After sliding-window 3D data', combined_data_arousal_slided.shape)
+    print('After sliding-window arousal labels', arousal_slided.shape)
+    unique_arousal, counts_arousal = np.unique(
+        arousal_slided, return_counts=True)
+    print(np.asarray((unique_arousal, counts_arousal)).T)
+
+    return combined_data_valence_slided, valence_slided, combined_data_arousal_slided, arousal_slided
+
+
+combined_data_valence_slided, valence_slided, combined_data_arousal_slided, arousal_slided = seg_SMOTE()
+print('Shape of the valence combined data valence 3D after augmentation by SMOTE:',
+      combined_data_arousal_slided.shape)
+print('Shape of the valance slided 3D after augmentation by SMOTE:',
+      valence_slided.shape)
+print('sahpe of Combined data arousal 3D after augmentation by SMOTE:',
+      combined_data_arousal_slided.shape)

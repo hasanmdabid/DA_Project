@@ -1,37 +1,31 @@
 import gc
 import pandas as pd
 from sklearn.metrics import f1_score
-from keras.models import Sequential
-from keras.layers import BatchNormalization
-from keras.layers import Dense
-from keras.layers import Flatten
-from keras.layers import Dropout
-from keras.layers.convolutional import Conv2D, MaxPooling2D
 
-
+from keras.callbacks import EarlyStopping
 from keras.callbacks import ModelCheckpoint
-from matplotlib import pyplot
+
 from keras.models import load_model
 from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
 import tensorflow as tf
 from keras.constraints import MaxNorm
 from data_preprocessing import *
 from data_preprocessing_withscalling import *
 from models import *
 from save_result import *
-from seg_SMOTE import *
-#from keras.wrappers.scikit_learn import KerasClassifier
+from keras.wrappers.scikit_learn import KerasClassifier
 from sklearn.model_selection import GridSearchCV
-
+from scikeras.wrappers import KerasClassifier
 from sklearn.model_selection import KFold
-from matplotlib import pyplot as plt
+import seg_TSAUG
+
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 
 
 # -------------------------------------------Importing the preprocessed data----------------
-"""
-eeg_valence_slided, valence_slided, eeg_arousal_slided, arousal_slided, combined_data_valence_slided, combined_valence_slided, combined_data_arousal_slided, combined_arousal_slided = data_pre()
+eeg_valence_slided, valence_slided, eeg_arousal_slided, arousal_slided, combined_data_valence_slided, combined_valence_slided, combined_data_arousal_slided, combined_arousal_slided = data_pre_pro_without_scalling()
 
 print('Shape of eeg_valence_data:', eeg_valence_slided.shape)
 print('Shape of valence_labels:', valence_slided.shape)
@@ -41,125 +35,128 @@ print('Shape of combined_data_valence_slided:', combined_data_valence_slided.sha
 print('Shape of combined_valence_labels:', combined_valence_slided.shape)
 print('Shape of combined_data_arousal_slided:', combined_data_arousal_slided.shape)
 print('Shape of combined_arousal_labels:', combined_arousal_slided.shape)
-"""
 
 
-combined_data_valence_slided, combined_valence_slided, combined_data_arousal_slided, combined_arousal_slided = seg_SMOTE()
 
 # Considering only Valence 
-n_timesteps, n_features, n_outputs = combined_data_valence_slided.shape[1], combined_data_valence_slided.shape[2], 1
+method = 'Cropping'
+activation='relu'
+init_mode='glorot_uniform'
+optimizer='Adam'
+dropout_rate=0.6
+batch_size = 32
+epochs = 200
+verbose = 1
+modelName = 'CONV2D'
 
-x_train, x_test, y_train, y_test = train_test_split(combined_data_valence_slided, combined_valence_slided, test_size=0.25, random_state=100, stratify=combined_valence_slided)
+x_train_raw, x_test, y_train_raw, y_test = train_test_split(combined_data_valence_slided, combined_valence_slided, test_size=0.25, random_state=100, stratify=valence_slided)
+for i in range(3, 11):
+    
+    Aug_factor = i
+    if Aug_factor == 0:
+        x_train = x_train_raw
+        y_train = y_train_raw
+    else:
+        x_train, y_train = seg_TSAUG.seg_TSAUG(x_train_raw, y_train_raw, Aug_factor)
+    #-----------------------------------------------------Evaluating the Model By usnig the Model check point----------------------------------------------------------------------------------------------------
+    # # Fitting the model With the system.
+    seed = 7
+    tf.random.set_seed(seed)
+    # Initialze the estimators
+    n_timesteps, n_features, n_outputs = x_train.shape[1], x_train.shape[2], 1
+    model = conv2D(activation, init_mode, optimizer, dropout_rate, n_timesteps, n_features, n_outputs)
+    print("Fit model:")
+    #-----------------------------------------------------------------Using early stop and Model Check point------------------------------------------------------------------------
+    # # simple early stopping
+    es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=30)
+    mc = ModelCheckpoint('best_model.h5', monitor='val_accuracy', mode='max', verbose=1, save_best_only=True)
+    history = model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=epochs, verbose=0, callbacks=[es, mc])
+    # load the saved model
+    saved_model = load_model('best_model.h5')
+    # evaluate the model
+    _, train_acc = saved_model.evaluate(x_train, y_train, verbose=0)
+    _, test_acc = saved_model.evaluate(x_test, y_test, verbose=0)
+    print('Train Accuracy: %.3f, Test Accuracy: %.3f' % (train_acc, test_acc))
 
-
+    predictions = (model.predict(x_test) > 0.5).astype("int32")
+    average_fscore_macro = (f1_score(y_test, predictions, average="macro"))
+    print(confusion_matrix(y_test, predictions))
+    print('\n')
+    print(classification_report(y_test, predictions))
+    print('\n')
+    saveResultsCSV(method, Aug_factor, modelName, epochs, batch_size, train_acc, test_acc, average_fscore_macro)
+    del x_train_raw, y_train_raw
+    tf.keras.backend.clear_session()
+    gc.collect()
 
 """
 #-----------------------------------------------------Performing the Gridsearch-cv -----------------------------------------------------------------------------------------
 # fix random seed for reproducibility
 
-seed = 42
+seed = 7
 tf.random.set_seed(seed)
 
-model1 = KerasClassifier(model=conv2D)
-model2 = KerasClassifier(model=conv1D, verbose=0)
-model3 = KerasClassifier(model=deepconvlstm, verbose=0)
 
-batch_size = [50, 60, 80, 100]
+# Initialze the estimators
+activation='relu'
+init_mode='glorot_uniform'
+optimizer='Adam'
+dropout_rate=0.6
+n_timesteps, n_features, n_outputs = combined_data_valence_slided.shape[1], combined_data_valence_slided.shape[2], 1
+model1 = KerasClassifier(model=conv1D(activation, init_mode, optimizer, dropout_rate, n_timesteps, n_features, n_outputs), verbose=0)
+
+batch_size = [10, 20, 50, 60]
 epochs = [10, 50, 100]
 dropout_rate = [0.1, 0.2, 0.4, 0.6, 0.8, 1.0]
 optimizer = ['SGD', 'RMSprop', 'Adagrad', 'Adam', 'Adamax']
 init_mode = ['uniform', 'lecun_uniform', 'normal', 'zero', 'glorot_normal', 'glorot_uniform', 'he_normal', 'he_uniform']
 activation = ['softmax', 'softplus', 'softsign', 'relu', 'tanh', 'sigmoid', 'hard_sigmoid', 'linear']
 
-#param_grid = dict(epochs=epochs, batch_size=batch_size, model__dropout_rate=dropout_rate, model__activation=activation, optimizer=optimizer, model__init_mode=init_mode)
-param_grid = dict(batch_size=batch_size, model__dropout_rate= dropout_rate)
-grid = GridSearchCV(estimator=model3, param_grid=param_grid, scoring="accuracy", refit="accuracy", cv=2)
-grid_result = grid.fit(x_train, y_train, epochs=10)
+estimator= model1
+param_grid_1st_evaluation = dict(batch_size=batch_size, epochs= epochs)
+param_grid_2nd_Evaluation = dict(epochs=epochs, batch_size=batch_size, model__dropout_rate=dropout_rate, model__activation=activation, optimizer=optimizer, model__init_mode=init_mode)
+grid = GridSearchCV(estimator= estimator, param_grid=param_grid_1st_evaluation, scoring="accuracy", refit="accuracy", cv=3)
+grid_result = grid.fit(x_train, y_train)
 # summarize results
+
 print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
-print('Best Estimator :\n', grid.best_estimator_)      # To get the best estimator
+#print('Best Estimator :\n', grid.best_estimator_)      # To get the best estimator
 print('Best Parameter :\n', grid.best_params_)         # to get the best parameters
 print('Best Score :\n', grid.best_score_)
-df = pd.DataFrame(grid.cv_results_)
-df = df.sort_values("rank_test_accuracy")
-df.to_csv('cv_results_batch_epoch.csv')
 
+"""
 
-#----------------------------------------------------------------Create the model----------------------------------------------------------------------------------------------------
-# Fitting the model With the system.
-model = conv2D()
-print("Fit model:")
-
-
-#-----------------------------------------------------------------Using early stop and Model Check point------------------------------------------------------------------------
-# simple early stopping
-es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=100)
-mc = ModelCheckpoint('best_model.h5', monitor='val_accuracy', mode='max', verbose=1, save_best_only=True)
-history = model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=1000, verbose=0, callbacks=[es, mc])
-# load the saved model
-saved_model = load_model('best_model.h5')
-# evaluate the model
-_, train_acc = saved_model.evaluate(x_train, y_train, verbose=0)
-_, test_acc = saved_model.evaluate(x_test, y_test, verbose=0)
-print('Train: %.3f, Test: %.3f' % (train_acc, test_acc))
 """
 #================================================================ Model Selection----------------------------------------------------------------------------------------------------
-# Fromt the above cod, we have found the best model (CONV2D).
+# From the above code, we have found the best model (CONV2D).
 # THe highest accuracy is 86.091%.
 
 # now we will use the best model (CONV2D) with the augmented data to increase the accuracy.
-def conv2D(activation='relu', init_mode='glorot_uniform', optimizer='Adam', dropout_rate=0.6):
-    model = Sequential()
-    # Adding Batch normalization before CONV
-    model.add(BatchNormalization(input_shape=(n_timesteps, n_features, 1)))
 
-    # 1st convolutional + pooling
-    model.add(Conv2D(filters=256, kernel_size=(3, 1), activation=activation, kernel_initializer=init_mode, input_shape=(n_timesteps, n_features, 1)))
-    model.add(MaxPooling2D(pool_size=(2, 1), strides=None, padding="valid"))
-    model.add(Dropout(dropout_rate))
-
-    # 2nd convolutional + pooling + normalization layer
-    model.add(Conv2D(filters=128, kernel_size=(3, 1), activation=activation, kernel_initializer=init_mode))
-    model.add(MaxPooling2D(pool_size=(2, 1), strides=None, padding="valid"))
-    model.add(Dropout(dropout_rate))
-
-    # 3rd block: convolutional + RELU + normalization
-    model.add(Conv2D(filters=64, kernel_size=(3, 1), activation=activation, kernel_initializer=init_mode))
-    model.add(MaxPooling2D(pool_size=(2, 1), strides=None, padding="valid"))
-    model.add(Dropout(dropout_rate))
-
-    # 4th block: convolutional + RELU + normalization
-    model.add(Conv2D(filters=32, kernel_size=(3, 1), activation=activation, kernel_initializer=init_mode))
-    model.add(MaxPooling2D(pool_size=(2, 1), strides=None, padding="valid"))
-    model.add(Dropout(dropout_rate))
-
-
-    # Fully-connected layer
-    model.add(Flatten())
-    model.add(Dense(128, kernel_initializer=init_mode, activation=activation))
-    model.add(Dense(64, kernel_initializer=init_mode, activation=activation))
-    model.add(Dense(32, kernel_initializer=init_mode, activation=activation))
-    model.add(Dense(1, kernel_initializer=init_mode, activation='sigmoid'))
-    # Compiling The model
-    model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
-
-    return model
-
-model = conv2D()
 
 # Fitting the model With the system.
 
+activation='relu'
+init_mode='glorot_uniform'
+optimizer='Adam'
+dropout_rate=0.6
+n_timesteps, n_features, n_outputs = combined_data_valence_slided.shape[1], combined_data_valence_slided.shape[2], 1
+
+
+model = conv2D(activation, init_mode, optimizer, dropout_rate, n_timesteps, n_features, n_outputs)
 print("Fit model:")
 
-method = 'SMOTE'
+method = 'WithoutAugmentation'
 modelname = 'Conv2D'
 epochs = 250
 batch_size = 32
 
-model.fit(x_train, y_train, epochs=epochs, validation_data=(x_test, y_test), verbose=1)
+es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=50)
+mc = ModelCheckpoint('best_model.h5', monitor='val_accuracy', mode='max', verbose=1, save_best_only=True)
+model.fit(x_train, y_train, epochs=epochs, batch_size=batch_size, validation_data=(x_test, y_test), verbose=1)
 
-predictions = (model.predict(x_test) > 0.5).astype("int32")
 loss, accuracy = model.evaluate(x_test, y_test, verbose=1)
+predictions = (model.predict(x_test) > 0.5).astype("int32")
 average_fscore_macro = (f1_score(y_test, predictions, average="macro"))
 print(confusion_matrix(y_test, predictions))
 print('\n')
@@ -169,7 +166,9 @@ print('\n')
 
 saveResultsCSV(method, modelname, epochs, batch_size, accuracy, average_fscore_macro, "", "", "")
 
-#del x_train, x_test, y_test, y_train, eeg_valence_slided, valence_slided, eeg_arousal_slided, arousal_slided, combined_data_valence_slided, combined_valence_slided, combined_data_arousal_slided, combined_arousal_slided
-del x_train, x_test, y_test, y_train, combined_data_valence_slided, combined_valence_slided, combined_data_arousal_slided, combined_arousal_slided
+del x_train, x_test, y_test, y_train, eeg_valence_slided, valence_slided, eeg_arousal_slided, arousal_slided, combined_data_valence_slided, combined_valence_slided, combined_data_arousal_slided, combined_arousal_slided
 tf.keras.backend.clear_session()
 gc.collect()
+
+"""
+

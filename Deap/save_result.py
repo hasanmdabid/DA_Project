@@ -1,17 +1,16 @@
 # This is the function to save the results.
 # the inputs are: Method, modelname, epochs, batch_size, accuracy, average_fscore_macro, number of kerns, and filter size
 
-def saveResultsCSV(method, modelname, epochs, batch_size, accuracy, average_fscore_macro, average_fscore_weighted,
-                   nKerns, filterSizes):
+def saveResultsCSV(method, Aug_factor, modelname, epochs, batch_size, train_acc, test_acc, average_fscore_macro):
     
     import os.path
     from pathlib import Path
     from datetime import datetime
-    path = './results/'
+    path = './Deap/results/'
     if not os.path.exists(path):
         os.makedirs(path)
 
-    fileString = './results/results.csv'
+    fileString = './Deap/results/results.csv'
     file = Path(fileString)
 
     now = datetime.now()
@@ -19,12 +18,11 @@ def saveResultsCSV(method, modelname, epochs, batch_size, accuracy, average_fsco
     if not file.exists():
         f = open(fileString, 'w')
         f.write(
-            'Finished on; Modelname; Epochs; Batch_Size; accuracy; Average_fscore_Macro; Average_fscores_weighted; nKerns; filterSize\n')
+            'Finished on; Method; Aug_factor; Modelname; Epochs; Batch_Size; train_accuracy; test_accuracy; Average_fscore_macro;\n')
         f.close()
     with open(fileString, "a") as f:
         f.write(
-            '{};{};{};{};{};{};{};{};{}:{}\n'.format(now, method, modelname, epochs, batch_size, accuracy, average_fscore_macro,
-                                                  average_fscore_weighted, nKerns, filterSizes))
+            '{};{};{};{};{};{};{};{};{}\n'.format(now, method, Aug_factor, modelname, epochs, batch_size, train_acc, test_acc, average_fscore_macro))
     f.close()
     
 

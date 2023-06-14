@@ -1,4 +1,4 @@
-def data_pre_pro_withscalling():
+def data_pre_pro_with_scalling():
     import pickle
     import numpy as np
     from sklearn.preprocessing import StandardScaler, MinMaxScaler
