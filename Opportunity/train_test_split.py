@@ -176,11 +176,6 @@ def train_test_split():
 
             valy = np.concatenate((trainys2r3, trainys3r3), axis=0)
 
-            print('Shape of Trainx:', trainx.shape)
-            print('Shape of Trainy:', trainy.shape)
-            print('Shape of Testx:', testx.shape)
-            print('Shape of Testy:', testy.shape)
-
             # ---------------------------------Rogen's Paper Stratagey-----------------------------------------------------------------------------
             # Converting 2d array in to 3D array with slided window algorithm where the overlap is 50% and window size is fixed 32 (1 sec).
         elif model_paper == 'ROGGEN':
@@ -278,10 +273,6 @@ def train_test_split():
 
             valy = testys1r4
 
-            print('Shape of Trainx:', trainx.shape)
-            print('Shape of Trainy:', trainy.shape)
-            print('Shape of Testx:', testx.shape)
-            print('Shape of Testy:', testy.shape)
 
         elif model_paper == 'ROGGEN':
             trainxs1r1, trainys1r1 = seg_TSAUG.seg_TSAUG(s1r1)
@@ -372,10 +363,6 @@ def train_test_split():
 
             valy = np.concatenate((trainys2r3, trainys3r3), axis=0)
 
-            print('Shape of Trainx:', trainx.shape)
-            print('Shape of Trainy:', trainy.shape)
-            print('Shape of Testx:', testx.shape)
-            print('Shape of Testy:', testy.shape)
 
         elif model_paper == 'ROGGEN':
             trainxs1r1, trainys1r1 = windowed_numpy_3Darray.slided_numpy_array(s1r1)
@@ -465,11 +452,6 @@ def train_test_split():
 
             valy = np.concatenate((trainys2r3, trainys3r3), axis=0)
 
-            print('Shape of Trainx:', trainx.shape)
-            print('Shape of Trainy:', trainy.shape)
-            print('Shape of Testx:', testx.shape)
-            print('Shape of Testy:', testy.shape)
-
             # ---------------------------------Rogen's Paper Stratagey-----------------------------------------------------------------------------
             # Converting 2d array in to 3D array with slided window algorithm where the overlap is 50% and window size is fixed 32 (1 sec).
         elif model_paper == 'ROGGEN':
@@ -506,13 +488,6 @@ def train_test_split():
 
             testx = np.concatenate((testxs2r4, testxs2r5, testxs3r4, testxs3r5), axis=0)
             testy = np.concatenate((testys2r4, testys2r5, testys3r4, testys3r5), axis=0)
-            print('shape of trainx =', trainx.shape)
-            print('shape of trainy =', trainy.shape)
-            print('Shape of testx =', testx.shape)
-            print('Shape of testy =', testy.shape)
-            print('Shape of Valx=', valx.shape)
-            print('Shape of valy=', valy.shape)
 
     del s1r1, s1r2, s1r3, s1r4, s1r5, s1_drill, s2r1, s2r2, s2r3, s2r4, s2r5, s2_drill, s3r1, s3r2, s3r3, s3r4, s3r5, s3_drill, s4r1, s4r2, s4r3, s4r4, s4r5, s4_drill
-
     return trainx, trainy, valx, valy, testx, testy
