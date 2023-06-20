@@ -38,7 +38,7 @@ def data_pre_pro_without_scalling():
     data = []
 
     for i in files:
-        filename = "/home/abidhasan/Documents/DA_Project/Deap/Data/Data/s" + i + ".dat"
+        filename = "/home/abidhasan/Documents/DA_Project/Deap/Data/s" + i + ".dat"
         trial = read_eeg_signal_from_file(filename)
         labels.append(trial['labels'])
         data.append(trial['data'])
@@ -280,10 +280,10 @@ def data_pre_pro_without_scalling():
         labels_to_save = np.zeros(nb_segments, dtype=int)
 
         for i in range(0, nb_segments):
-            labels = x[i][:][:]
-            data_to_save[i] = labels[:, :-1]
+            data = x[i][:][:]
+            data_to_save[i] = data[:, :-1]
             #labels = x[i][:][:]
-            labels = labels[:, -1]
+            labels = data[:, -1]
             # Convert labels to int to avoid typing issues
             labels = labels.astype('int')
             values, counts = np.unique(labels, return_counts=True)
@@ -296,14 +296,9 @@ def data_pre_pro_without_scalling():
     eeg_arousal_slided, arousal_slided = slided_numpy_array(eeg_arousal)
     combined_data_valence_slided, combined_valence_slided = slided_numpy_array(combined_data_valence)
     combined_data_arousal_slided, combined_arousal_slided = slided_numpy_array(combined_data_arousal)
-
-    #print('After sliding-window 3D data', combined_data_valence_slided.shape)
-    #print('After sliding-window labels', combined_valence_slided.shape)
+    
     unique_valence, counts_valence = np.unique(combined_valence_slided, return_counts=True)
     #print(np.asarray((unique_valence, counts_valence)).T)
-
-    #print('After sliding-window 3D data', combined_data_arousal_slided.shape)
-    #print('After sliding-window labels', combined_arousal_slided.shape)
     unique_arousal, counts_arousal = np.unique(arousal_slided, return_counts=True)
     #print(np.asarray((unique_arousal, counts_arousal)).T)
 

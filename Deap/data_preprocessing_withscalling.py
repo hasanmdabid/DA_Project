@@ -87,6 +87,8 @@ def data_pre_pro_with_scalling():
 
     # This function will generate the slided Windowed Data
     def slided_numpy_array(data):
+        # This function will generate the 3D Data for the DEEP CNN model
+        # Input is a 2D array where the last column contains the labels information
         # x = data.to_numpy()
         def get_strides(a, L, ov):
             out = []

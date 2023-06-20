@@ -1,5 +1,5 @@
 import gc
-import pandas as pd
+import numpy as np
 from sklearn.metrics import f1_score
 
 from keras.callbacks import EarlyStopping
@@ -16,8 +16,10 @@ from models import *
 from save_result import *
 from sklearn.model_selection import GridSearchCV
 from scikeras.wrappers import KerasClassifier
+#from keras.wrappers.scikit_learn import KerasClassifier
 from sklearn.model_selection import KFold
 import seg_TSAUG
+from DTW import *
 
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
@@ -38,25 +40,62 @@ print('Shape of combined_arousal_labels:', combined_arousal_slided.shape)
 
 
 # Considering only Valence 
-method = 'Cropping'
+method = 'Randomtimewarp'
 activation='relu'
 init_mode='glorot_uniform'
 optimizer='Adam'
 dropout_rate=0.6
 batch_size = 32
 epochs = 200
-verbose = 1
+verbose = 2
 modelName = 'CONV2D'
+Aug_factor = 1
+
+Family_name = input('Mention the Family name ("TSAUG, "TW", "RTW", DTW"):') 
+
 
 x_train_raw, x_test, y_train_raw, y_test = train_test_split(combined_data_valence_slided, combined_valence_slided, test_size=0.25, random_state=100, stratify=valence_slided)
-for i in range(3, 11):
-    
+for i in range(1, 3):
     Aug_factor = i
     if Aug_factor == 0:
         x_train = x_train_raw
         y_train = y_train_raw
     else:
-        x_train, y_train = seg_TSAUG.seg_TSAUG(x_train_raw, y_train_raw, Aug_factor)
+        if Family_name == 'TSAUG':
+            x_train, y_train = seg_TSAUG.seg_TSAUG(x_train_raw, y_train_raw, Aug_factor)
+        elif Family_name == 'DTW':
+            if Aug_factor == 1:
+                guided_DTW_1, labels = DTW(x_train_raw, y_train_raw)
+                x_train = np.concatenate((x_train_raw, guided_DTW_1), axis=0)
+                y_train = np.concatenate((y_train_raw, labels), axis=0)
+            elif Aug_factor == 2:
+                guided_DTW_1, labels = DTW(x_train_raw, y_train_raw)
+                guided_DTW_2, labels = DTW(x_train_raw, y_train_raw)
+                x_train = np.concatenate((x_train_raw, guided_DTW_1, guided_DTW_2), axis=0)
+                y_train = np.concatenate((y_train_raw, labels, labels), axis=0)
+        elif Family_name == 'RTW':
+            if Aug_factor == 1:
+                guided_DTW_1, labels = RTW(x_train_raw, y_train_raw)
+                x_train = np.concatenate((x_train_raw, guided_DTW_1), axis=0)
+                y_train = np.concatenate((y_train_raw, labels), axis=0)
+            elif Aug_factor == 2:
+                guided_DTW_1, labels = RTW(x_train_raw, y_train_raw)
+                guided_DTW_2, labels = RTW(x_train_raw, y_train_raw)
+                x_train = np.concatenate((x_train_raw, guided_DTW_1, guided_DTW_2), axis=0)
+                y_train = np.concatenate((y_train_raw, labels, labels), axis=0)
+        elif Family_name == 'TW':
+            if Aug_factor == 1:
+                guided_DTW_1, labels = TW(x_train_raw, y_train_raw)
+                x_train = np.concatenate((x_train_raw, guided_DTW_1), axis=0)
+                y_train = np.concatenate((y_train_raw, labels), axis=0)
+            elif Aug_factor == 2:
+                guided_DTW_1, labels = TW(x_train_raw, y_train_raw)
+                guided_DTW_2, labels = TW(x_train_raw, y_train_raw)
+                x_train = np.concatenate((x_train_raw, guided_DTW_1, guided_DTW_2), axis=0)
+                y_train = np.concatenate((y_train_raw, labels, labels), axis=0)
+            
+        
+    print('Shape of x_train, y_train:', x_train.shape, y_train.shape)
     #-----------------------------------------------------Evaluating the Model By usnig the Model check point----------------------------------------------------------------------------------------------------
     # # Fitting the model With the system.
     seed = 7
@@ -68,13 +107,13 @@ for i in range(3, 11):
     #-----------------------------------------------------------------Using early stop and Model Check point------------------------------------------------------------------------
     # # simple early stopping
     es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=30)
-    mc = ModelCheckpoint('best_model.h5', monitor='val_accuracy', mode='max', verbose=1, save_best_only=True)
-    history = model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=epochs, verbose=0, callbacks=[es, mc])
+    #mc = ModelCheckpoint('best_model.h5', monitor='val_accuracy', mode='max', verbose=1, save_best_only=True)
+    model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=epochs, verbose=verbose, callbacks=es)
     # load the saved model
-    saved_model = load_model('best_model.h5')
+    #saved_model = load_model('best_model.h5')
     # evaluate the model
-    _, train_acc = saved_model.evaluate(x_train, y_train, verbose=0)
-    _, test_acc = saved_model.evaluate(x_test, y_test, verbose=0)
+    _, train_acc = model.evaluate(x_train, y_train, verbose=0)
+    _, test_acc = model.evaluate(x_test, y_test, verbose=0)
     print('Train Accuracy: %.3f, Test Accuracy: %.3f' % (train_acc, test_acc))
 
     predictions = (model.predict(x_test) > 0.5).astype("int32")
@@ -83,10 +122,12 @@ for i in range(3, 11):
     print('\n')
     print(classification_report(y_test, predictions))
     print('\n')
-    saveResultsCSV(method, Aug_factor, modelName, epochs, batch_size, train_acc, test_acc, average_fscore_macro)
-    del x_train_raw, y_train_raw
+    saveResultsCSV(method, Aug_factor, modelName, epochs, batch_size, train_acc, test_acc, average_fscore_macro) # In save results we are providing the AUG factor
+    del x_train, y_train
     tf.keras.backend.clear_session()
     gc.collect()
+
+  
 
 """
 #-----------------------------------------------------Performing the Gridsearch-cv -----------------------------------------------------------------------------------------
