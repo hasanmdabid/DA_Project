@@ -38,9 +38,6 @@ x_train_raw, x_test, y_train_raw, y_test = train_test_split(combined_data_valenc
 #**********************Select the Augmntation factor***************
 Aug_factor = 1
 #******************************************************************
-print('Before augmentation sape of X_train and y_train:', x_train_raw.shape, y_train_raw.shape)
-x_train, y_train = seg_TSAUG.seg_TSAUG(x_train_raw, y_train_raw, Aug_factor)
-print('After augmentation sape of X_train and y_train:', x_train.shape, y_train.shape)
 
 method = 'Cropping'
 activation='relu'

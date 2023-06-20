@@ -9,7 +9,6 @@ from keras.models import load_model
 from sklearn.model_selection import train_test_split
 
 import tensorflow as tf
-
 from data_preprocessing import *
 from data_preprocessing_withscalling import *
 from models import *

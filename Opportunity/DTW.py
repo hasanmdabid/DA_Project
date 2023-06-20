@@ -1,7 +1,8 @@
 
 import numpy as np
 import utils.augmentation as aug
-import numpy as np
+
+# All the Function takes 3D input and outputs arrays are also 3D
 
 def slided_numpy_array(data):
 

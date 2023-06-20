@@ -14,7 +14,6 @@ from data_preprocessing import *
 from data_preprocessing_withscalling import *
 from models import *
 from save_result import *
-from keras.wrappers.scikit_learn import KerasClassifier
 from sklearn.model_selection import GridSearchCV
 from scikeras.wrappers import KerasClassifier
 from sklearn.model_selection import KFold
