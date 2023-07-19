@@ -36,7 +36,7 @@ print('Shape of combined_arousal_labels:', combined_arousal_slided.shape)
 
 
 # Considering only Valence
-method = 'Convolve'
+method = 'Cropping'
 activation = 'relu'
 init_mode = 'glorot_uniform'
 optimizer = 'Adam'
@@ -60,10 +60,14 @@ print('X_Augmentation:', x_aug.shape) # Shape of x_aug is 3D
 print('Y_Augmentation:', y_aug.shape) # Shape of y_aug is 3D
 
 # First we will convert the 3D array to 2D arrays.  Then we will add the labels infromation at the last column to form a 2D Augmented datset.
-Aug_data = np.concatenate((x_aug.reshape(x_aug.shape[0]*x_aug.shape[1], x_aug.shape[2]), y_aug.reshape(y_aug.shape[0]*y_aug.shape[1], y_aug.shape[2])), axis=1) 
+x_aug_2d = x_aug.reshape(x_aug.shape[0]*x_aug.shape[1], x_aug.shape[2])  #Converting data from 3D to 2D
+y_aug_2d = np.expand_dims(y_aug, axis=1)                                 # Adding a dimension to convert it into 2D
+y_aug_2d = np.repeat(y_aug_2d, 128, axis=0)                              # Converting the labels into total number (128) of time stamp
+
+
+# First we will convert the 3D array to 2D arrays.  Then we will add the labels infromation at the last column to form a 2D Augmented datset.
+Aug_data = np.concatenate((x_aug_2d, y_aug_2d), axis=1) 
 print('Shape of Augmented dataset:', Aug_data.shape) # Shape is 2D
-
-
 
 for i in np.arange(0.2, 1, 0.2):
       

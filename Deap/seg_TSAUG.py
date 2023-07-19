@@ -29,15 +29,15 @@ def seg_TSAUG(x, y, Aug_factor):
 
     # -----------------Creating the augmenter class---------------------------------------------------
     #time_augmenter = (TimeWarp() * Aug_factor)  # random time warping 16 times in parallel)
-    #crop_augmenter = (Crop(size=L) * Aug_factor)  # random crop subsequences with length 16)
+    crop_augmenter = (Crop(size=L) * Aug_factor)  # random crop subsequences with length 16)
     #jittering_augmenter = (AddNoise(loc=0.0, scale=0.1, distr='gaussian', kind='additive') * Aug_factor)  # Loc: Mean of the random noise. scale: The standard deviaton of the random noise. We camn use Nornmnal
     #convolve_augmenter = (Convolve(window="flattop", size=16) * Aug_factor)  # Convolve time series with a kernel window OF 16.
-    rotation_augmenter = (Reverse() @ 0.8 * Aug_factor)  # with 50% probability, reverse the sequence
+    #rotation_augmenter = (Reverse() @ 0.8 * Aug_factor)  # with 50% probability, reverse the sequence
     #quantize_augmenter = (Quantize(n_levels=[10, 20, 30]) * Aug_factor)  # random quantize to 10-, 20-, or 30- level sets
     #drift_augmenter = (Drift(max_drift=(0.1, 0.5)) @ 0.8 * Aug_factor)  # with 80% probability, random drift the signal up to 10% - 50%
     #pool_augmenter = (Pool(size=10) * Aug_factor)  # Reduce the temporal resolution without changing the length
 
-    x_aug, y_aug = rotation_augmenter.augment(x, y)
+    x_aug, y_aug = crop_augmenter.augment(x, y)
     
     #************************************************************************************************
     # Case 1: If the Augmation unit if factor then x and y should be the concatination of x_original and x_aug 
