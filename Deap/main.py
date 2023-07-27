@@ -64,6 +64,7 @@ for i in range(1, 3):
         if Family_name == 'TSAUG':
             x_train, y_train = seg_TSAUG.seg_TSAUG(x_train_raw, y_train_raw, Aug_factor)
         elif Family_name == 'DTW':
+            method = 'GuidedTimeWarp'
             if Aug_factor == 1:
                 guided_DTW_1, labels = DTW(x_train_raw, y_train_raw)
                 x_train = np.concatenate((x_train_raw, guided_DTW_1), axis=0)
@@ -74,6 +75,7 @@ for i in range(1, 3):
                 x_train = np.concatenate((x_train_raw, guided_DTW_1, guided_DTW_2), axis=0)
                 y_train = np.concatenate((y_train_raw, labels, labels), axis=0)
         elif Family_name == 'RTW':
+            method = 'RandomTimeWarp'
             if Aug_factor == 1:
                 guided_DTW_1, labels = RTW(x_train_raw, y_train_raw)
                 x_train = np.concatenate((x_train_raw, guided_DTW_1), axis=0)
@@ -84,6 +86,7 @@ for i in range(1, 3):
                 x_train = np.concatenate((x_train_raw, guided_DTW_1, guided_DTW_2), axis=0)
                 y_train = np.concatenate((y_train_raw, labels, labels), axis=0)
         elif Family_name == 'TW':
+            method = 'TimeWarp'
             if Aug_factor == 1:
                 guided_DTW_1, labels = TW(x_train_raw, y_train_raw)
                 x_train = np.concatenate((x_train_raw, guided_DTW_1), axis=0)
