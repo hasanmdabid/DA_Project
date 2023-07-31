@@ -251,19 +251,15 @@ if __name__ == "__main__":
 	print(subjects.shape)
 	print("\n")
 
-
-	# HCF
-	for selected_sensors  in [["gsr"]]:
-		for n_estimators in [100]:
-			param["n_estimators"] = n_estimators
-			param["selected_sensors"] = selected_sensors
-			conduct_experiment(X.copy(), y.copy(), subjects.copy(), clf= rf(param), name= "rf", five_times= False, rfe= False)
-
-	# Deep learning
+   	# Deep learning
 	param.update({"epochs": 100, "bs": 32, "lr": 0.0001, "smooth": 256, "resample": 256, "dense_out": 100, "minmax_norm": True})
 
 	for clf in [mlp]:
-		try:
-			conduct_experiment(X.copy(), y.copy(), subjects.copy(), clf= clf(param.copy()), name= param["dataset"], five_times= False, rfe= False)
-		except Exception as e:
-			print(e)
+         for aug in ["jitter", "scaling", "rotation", "crop", "time_warp", "permutation", "magnitude_warp", "window_warp", "random_guided_warp", "discriminative_guided_warp"]:
+            try:
+                param["aug"] = aug
+                conduct_experiment(X.copy(), y.copy(), subjects.copy(), clf= clf(param.copy()), name= param["dataset"], five_times= False, rfe= False)
+            except Exception as e:
+                print(e)
+
+    
