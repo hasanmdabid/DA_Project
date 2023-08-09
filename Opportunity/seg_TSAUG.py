@@ -1,3 +1,9 @@
+# This data Augmentation function take the input as 3D array and give the output as a 3D array
+# The input data should be the train data set only. 
+#----> INPUT FORMATE x = (Samples, Row, Column) 3D, Y = labels (1D)
+#----> OUT FORMATE Y = Samples, Row, Column(1)
+
+
 import load_data
 import numpy as np
 import pandas as pd
@@ -33,7 +39,7 @@ def seg_TSAUG(data):
         data_min = data_min.to_numpy()
         data_min = get_strides(data_min, L, ov)
         # print('Shape of DATA with Minority target after slided window', data_min.shape)
-        # print(data.shape)
+
 
         x_maj = data_maj[:, :, :-1].astype('float32')
         # print('Majority Feature class shape:', x_maj.shape)

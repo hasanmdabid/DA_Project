@@ -18,6 +18,3 @@ def RTW(data, labels):
 def TW(data, labels):
     guided_TW_1 = aug.time_warp(data)
     return guided_TW_1, labels
-
-
-

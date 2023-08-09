@@ -21,9 +21,9 @@ RETURN_PATH = 1
 RETURN_VALUE = 0
 RETURN_ALL = -1
 
-aug_methods = ["jitter", "scaling", "rotation", "crop", "permutation", "magnitude_warp", 
-                                "time_warp", "window_slice", "spawner", "wdba", "random_guided_warp", 
-                                "random_guided_warp_shape", "discriminative_guided_warp", "discriminative_guided_warp_shape"]
+aug_methods = ["jitter", "scaling", "rotation", "crop", "permutation", "magnitude_warp", "time_warp", "window_slice", 
+               "spawner", "wdba", "random_guided_warp", "random_guided_warp_shape", "discriminative_guided_warp", 
+               "discriminative_guided_warp_shape"]
 
 #-------------------------------------------------------------------------------------------------------
 # DTW
