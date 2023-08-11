@@ -29,7 +29,7 @@ def read_biovid_np():
 	-------
 	X, y, subjects: np.
 	'''
-	np_dir = Path("BioVid", "datasets", "biovid", "np-dataset")
+	np_dir = Path("datasets", "biovid", "np-dataset")
 	return np.load(Path(np_dir, "X.npy")), np.load(Path(np_dir, "y.npy")), np.load(Path(np_dir, "subjects.npy"))
 
 def get_initials(file_name, n= 4):
