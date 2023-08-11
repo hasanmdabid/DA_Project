@@ -105,10 +105,13 @@ def prepare_data(X, y, subjects, param):
 
         # TODO: implement more augmentation methods here options
         if param["aug_method"] == "crop":
-            cropping_augmenter = (Crop(size= 1408) * param["aug_factor"]) 
-            x_aug, y_aug = cropping_augmenter.augment(X_for_aug, y_for_aug)
+            augmenter = (Crop(size= 1408) * param["aug_factor"]) 
+        elif param["aug_method"] == "jitter":
+            augmenter = (AddNoise(loc=0.0, scale=0.1, distr='gaussian', kind='additive') * param["aug_factor"])
         else:
             raise NotImplementedError(f"Augmentation method '{param['aug_method']}' is not available.")
+
+        x_aug, y_aug = augmenter.augment(X_for_aug, y_for_aug)
 
         # reconstruct original shape
         x_aug = np.expand_dims(x_aug, axis= -1)
