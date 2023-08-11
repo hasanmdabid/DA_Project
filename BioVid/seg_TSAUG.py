@@ -4,12 +4,12 @@
 #----> INPUT FORMATE x = (Samples, Row, Column) 3D, Y = labels (Samples, Row, Columns), 3D
 #----> OUTPUT FORMATE x = (Samples, Row, Columns) 3D, Y = labels (Samples, Row, Column), 3D
 
+# "Input Y must be a numpy array with shape (T,), (N, T), or (N, T, L), where T is the length of a series, 
+# N is the number of series, and L is the number of a segmentation classes.""
 
 import numpy as np
 from tsaug import TimeWarp, Crop, Quantize, Drift, Reverse, Convolve, Pool, AddNoise
 import pandas as pd
-import numpy as np
-
 
 def seg_TSAUG(x, y, Aug_factor):
     L = 1408
@@ -38,6 +38,8 @@ def seg_TSAUG(x, y, Aug_factor):
     #pool_augmenter = (Pool(size=10) * Aug_factor)  # Reduce the temporal resolution without changing the length
 
     x_aug, y_aug = cropping_augmenter.augment(x, y)
+
+    return x_aug, y_aug
     
     #************************************************************************************************
     # Case 1: If the Augmation unit is factor then x and y should be the concatination of x_original and x_aug 

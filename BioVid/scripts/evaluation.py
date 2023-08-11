@@ -126,7 +126,7 @@ def leave_one_subject_out(data, subjects, subject_id):
 
     return train + test
 
-def rfe_loso(X, aug, hcf, y, subjects, clf, rfes= None, step= 1, output_csv = Path("results", "rfe_loso.csv"), save_model_summary= False):
+def rfe_loso(X, y, hcf, subjects, clf, rfes= None, step= 1, output_csv = Path("results", "rfe_loso.csv"), save_model_summary= False):
     """Function to validate a keras model using leave one subject out validation in combination with a LOSO and RFE.
 
     Args:
@@ -148,16 +148,18 @@ def rfe_loso(X, aug, hcf, y, subjects, clf, rfes= None, step= 1, output_csv = Pa
     # create dummy classifier
     dummy = type(clf)(clf.param)
     # split data into folds
-    x_train, aug_train, hcf_train, y_train, sub_train, x_test, aug_test, hcf_test, y_test, sub_test= leave_one_subject_out(
-        [X, aug, hcf, y, subjects], subjects, 1)
+    x_train, y_train, hcf_train, sub_train, x_test, y_test, hcf_test, sub_test = leave_one_subject_out(
+        [X, y, hcf, subjects], subjects, 1)
     # set the dataset for the classifier
-    dummy.set_dataset(train_data= (x_train, y_train), test_data= (x_test, y_test), aug_data= (aug_train, aug_test),
-                                    hcf_data= (hcf_train, hcf_test), sub_data= (sub_train, sub_test))
+    dummy.set_dataset(  train_data= (x_train, y_train), 
+                        test_data= (x_test, y_test), 
+                        hcf_data= (hcf_train, hcf_test),
+                        sub_data= (sub_train, sub_test))
     # caculate feature shape
     dummy.data_processing()
     num_features = dummy.get_features(0)[0].shape[1]
     # delete variables
-    del dummy, x_train, aug_train, hcf_train, y_train, sub_train, x_test, aug_test, hcf_test, y_test, sub_test
+    del dummy, x_train, hcf_train, y_train, sub_train, x_test, hcf_test, y_test, sub_test
 
     # if RFEs is empty, create a list starting with 'num_features' and decreasing to 1
     if rfes is None:
@@ -188,12 +190,14 @@ def rfe_loso(X, aug, hcf, y, subjects, clf, rfes= None, step= 1, output_csv = Pa
             with HiddenPrints():
 
                 # split data into folds
-                x_train, aug_train, hcf_train, y_train, sub_train, x_test, aug_test, hcf_test, y_test, sub_test= leave_one_subject_out(
-                    [X, aug, hcf, y, subjects], subjects, subject)
+                x_train, y_train, hcf_train, sub_train, x_test, y_test, hcf_test, sub_test = leave_one_subject_out(
+                    [X, y, hcf, subjects], subjects, subject)
 
                 # set the dataset for the classifier
-                clf.set_dataset(train_data= (x_train, y_train), test_data= (x_test, y_test), aug_data= (aug_train, aug_test),
-                                                hcf_data= (hcf_train, hcf_test), sub_data= (sub_train, sub_test))
+                clf.set_dataset(  train_data= (x_train, y_train), 
+                        test_data= (x_test, y_test), 
+                        hcf_data= (hcf_train, hcf_test),
+                        sub_data= (sub_train, sub_test))
 
                 # retrieve the features from the classifier
                 clf.data_processing()
@@ -207,8 +211,10 @@ def rfe_loso(X, aug, hcf, y, subjects, clf, rfes= None, step= 1, output_csv = Pa
                 current_rf = rf(clf.param)
 
                 # set the dataset
-                current_rf.set_dataset(train_data= (x_train, y_train), test_data= (x_test, y_test), aug_data= (aug_train, aug_test),
-                                hcf_data= (hcf_train, hcf_test), sub_data= (sub_train, sub_test))
+                current_rf.set_dataset(  train_data= (x_train, y_train), 
+                        test_data= (x_test, y_test), 
+                        hcf_data= (hcf_train, hcf_test),
+                        sub_data= (sub_train, sub_test))
 
                 # train the rf just on the selected features
                 current_rf.create_model()
@@ -265,7 +271,7 @@ def rfe_loso(X, aug, hcf, y, subjects, clf, rfes= None, step= 1, output_csv = Pa
         # save columns to delete
         to_drop.extend(least_important)
 
-def loso_cross_validation(X, aug, aug_method,  hcf, y, subjects, clf, output_csv = Path("results", "loso.csv"), save_model_summary= False):
+def loso_cross_validation(X, y, hcf, subjects, clf, output_csv = Path("results", "loso.csv"), save_model_summary= False):
     """Function to validate a keras model using leave one subject out validation.
 
     Args:
@@ -292,14 +298,16 @@ def loso_cross_validation(X, aug, aug_method,  hcf, y, subjects, clf, output_csv
 
     for subject in (pbar := tqdm(np.unique(subjects))):
 
-        x_train, aug_train, hcf_train, y_train, sub_train, x_test, aug_test, hcf_test, y_test, sub_test= leave_one_subject_out(
-                [X, aug, hcf, y, subjects], subjects, subject)
+        x_train, y_train, hcf_train, sub_train, x_test, y_test, hcf_test, sub_test = leave_one_subject_out(
+                    [X, y, hcf, subjects], subjects, subject)
 
         # completly delete old classifier and instantiate new one
         clf = type(clf)(clf.param)
 
-        clf.set_dataset(train_data= (x_train, y_train), test_data= (x_test, y_test), aug_data= (aug_train, aug_test),
-                        hcf_data= (hcf_train, hcf_test), sub_data= (sub_train, sub_test))
+        clf.set_dataset(  train_data= (x_train, y_train), 
+                        test_data= (x_test, y_test), 
+                        hcf_data= (hcf_train, hcf_test),
+                        sub_data= (sub_train, sub_test))
 
         clf.data_processing()
         clf.create_model()
@@ -330,6 +338,8 @@ def loso_cross_validation(X, aug, aug_method,  hcf, y, subjects, clf, output_csv
 
     if len(rfe_features) != 0:
         clf.param["rfe_features"] = list(set(clf.param["rfe_features"]))
+
+    aug_method = clf.param["aug_method"]
 
     save_data(clf, aug_method, output_csv, start_date, start_time, all_fscores, all_accs, df_importance, save_model_summary)
 
@@ -388,7 +398,7 @@ def save_data(clf, aug_method,  output_csv, start_date, start_time, all_fscores,
             with open(model_summary_path, 'w') as f:
                 clf.model.summary(print_fn=lambda x: f.write(x + '\n'))
 
-def five_loso(X, aug, hcf, y, subjects, clf, runs= 5, output_csv = Path("results", "5_loso.csv")):
+def five_loso(X, y, hcf, subjects, clf, runs= 5, output_csv = Path("results", "5_loso.csv")):
     """Function to validate a keras model using a leave one subject out validation 5 times and computing the mean.
 
     Args:

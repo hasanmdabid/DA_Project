@@ -88,7 +88,7 @@ class classifier(object):
 	def set_param(self, param):
 		self.param = param
 
-	def set_dataset(self, train_data, test_data, hcf_data, sub_data, aug_data):
+	def set_dataset(self, train_data, test_data, hcf_data, sub_data):
 
 		self.x_train = train_data[0]
 		self.y_train = train_data[1]
@@ -98,25 +98,13 @@ class classifier(object):
 		self.hcf_test = hcf_data[1]
 		self.sub_train = sub_data[0]
 		self.sub_test = sub_data[1]
-		self.aug_train = aug_data[0]
-		self.aug_test = aug_data[1]
 		assert self.x_train.shape[1:] == self.x_test.shape[1:]
 
 		self.num_classes = self.y_train.shape[1]
 		self.num_sensors = self.x_train.shape[2]
 
 	def data_processing(self):
-		# If there is augmentation data unequal to raw data and param is said, we extend 'train' with 'aug train'
-		if self.aug_train is not None and not np.array_equal(self.x_train, self.aug_train) and "aug" in self.param and len(self.param["aug"]) > 0:
-			self.x_train = np.concatenate([self.x_train, self.aug_train], axis= 0)
-			self.y_train = np.concatenate([self.y_train] + [self.y_train] * len(self.param["aug"]), axis=0)
-			self.sub_train = np.concatenate([self.sub_train] + [self.sub_train] * len(self.param["aug"]), axis=0)
-
-			# If the param is given, we extend the 'test' set with the augmented test set
-			if "use_aug_test" in self.param and self.param["use_aug_test"]:
-				self.x_test = np.concatenate([self.x_test, self.aug_test], axis= 0)
-				self.y_test = np.concatenate([self.y_test] + [self.y_test] * len(self.param["aug"]), axis=0)
-				self.sub_test = np.concatenate([self.sub_test] + ([self.sub_test] * len(self.param["aug"])), axis=0)			
+		pass
 
 	def return_dataset(self):
 		"""Function to retrieve the used dataset of the network.

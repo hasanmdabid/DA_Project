@@ -13,6 +13,9 @@ from pathlib import Path
 from scipy.stats import zscore
 from scripts.augmentation import augment
 
+from tensorflow.python.keras.utils.np_utils import to_categorical
+from tsaug import TimeWarp, Crop, Quantize, Drift, Reverse, Convolve, Pool, AddNoise
+
 from hcf import get_hcf, moving_average
 from scripts.classifier import *
 from scripts.preprocessing import remove_ecg_wandering, preprocess_np
@@ -53,49 +56,85 @@ def prepare_data(X, y, subjects, param):
     hcf = hcf.fillna(0)
 
     # ------------------------------------------ Raw
-    if "aug" in param and type(param["aug"]) == list:
-        aug = augment(X, y, dataset= param["dataset"], l = param["aug"])
-        print(X.shape, y.shape)
-        print(aug.shape)
-    else:
-        aug = None
-
     if "cut" in param and param["cut"] is not None:
         start = int(param["input_fs"] * param["cut"][0])
         end = int(param["input_fs"] * param["cut"][1])
         X = X[:, start:end]
-        aug = aug[:, start:end] if aug is not None else None
 
     if "resample" in param and param["resample"] is not None:
         X = resample_axis(X, input_fs= param["input_fs"], output_fs= param["resample"])
-        aug = resample_axis(aug, input_fs= param["input_fs"], output_fs= param["resample"]) if aug is not None else None
 
     sensor_ids = [param["sensor_names"].index(x) for x in param["selected_sensors"]]
     X = X[:, :, sensor_ids, :]
-    aug = aug[:, :, sensor_ids, :] if aug is not None else None
 
     if "smooth" in param and param["smooth"] != None:
         for s in range(X.shape[2]):
             X[:, :, s, :] = np.apply_along_axis(func1d= moving_average, axis= 1, arr=X[:, :, s, :], w=param["smooth"])
-            if aug is not None:
-                aug[:, :, s, :] = np.apply_along_axis(func1d= moving_average, axis= 1, arr=aug[:, :, s, :], w=param["smooth"])
 
     if "minmax_norm" in param and param["minmax_norm"]:
         X = normalize(X)
-        aug = normalize(aug)
     if "znorm" in param and param["znorm"]:
         X = zscore(X, axis= 1)
-        aug = zscore(aug, axis= 1)
 
     # ------------------------------------------ Generic
     # select classes
     if "classes" in param and param["classes"] is not None:
         # select certain classes from the data
-        X, aug, hcf, subjects, y = pick_classes(data = [X, aug, hcf, subjects], y= y, classes = param["classes"], input_is_categorical= True)
+        X, hcf, subjects, y = pick_classes(data = [X, hcf, subjects], y= y, classes = param["classes"], input_is_categorical= True)
 
-    return X, aug, hcf, y, subjects
+    # ------------------------------------------ Augmentation
+    if (("aug_factor" in param) and (param["aug_factor"] is not None) and
+        ("aug_method" in param) and (param["aug_method"] is not None)):
+        aug_factor_type = type(param["aug_factor"])
+        if (aug_factor_type != int) and (aug_factor_type!= float):
+            raise ValueError(f"Param 'aug_factor' should be numeric but received '{param['aug_factor']}' with type '{aug_factor_type}'.")
 
-def conduct_experiment(X, aug_method, y, subjects, clf, name, five_times= False, rfe= False):
+        X_for_aug = X[:, :, :, 0]
+
+        # convert from one-hot encoding
+        y_for_aug = np.argmax(y, axis= 1)
+        # extend axis
+        y_for_aug = np.expand_dims(y_for_aug, axis= -1)
+        # repeat the value for the time series
+        y_for_aug = np.repeat(y_for_aug, repeats= X.shape[1], axis=1)
+        y_for_aug = np.expand_dims(y_for_aug, axis= -1)
+
+        print("Data shapes before augmentation")
+        print("X shape:", X_for_aug.shape)
+        print("y shape:", y_for_aug.shape)
+
+        # TODO: implement more augmentation methods here options
+        if param["aug_method"] == "crop":
+            cropping_augmenter = (Crop(size= 1408) * param["aug_factor"]) 
+            x_aug, y_aug = cropping_augmenter.augment(X_for_aug, y_for_aug)
+        else:
+            raise NotImplementedError(f"Augmentation method '{param['aug_method']}' is not available.")
+
+        # reconstruct original shape
+        x_aug = np.expand_dims(x_aug, axis= -1)
+
+        # y to one hot encoding
+        y_aug = to_categorical(y_aug[:, 0, 0])
+
+        # extend subjects accordingly
+        # TODO: check if this is correct
+        subjects_aug = np.repeat(subjects, repeats= param["aug_factor"])
+
+        # concatenate
+        X = np.concatenate([X, x_aug], axis= 0)
+        y = np.concatenate([y, y_aug], axis= 0)
+        subjects = np.concatenate([subjects, subjects_aug], axis= 0)
+
+        print("Shape of after augmenation:")
+        print("X shape:", X.shape)
+        print("y shape:", y.shape)
+        print("subjects shape:", subjects.shape)
+
+        hcf = None
+
+    return X, y, hcf, subjects
+
+def conduct_experiment(X, y, subjects, clf, name, five_times= False, rfe= False):
     """ Method to conduct an experiment. Data to perform a ML task needs to be given.
 
     Args:
@@ -107,20 +146,21 @@ def conduct_experiment(X, aug_method, y, subjects, clf, name, five_times= False,
         five_times (bool, optional): Whether to conduct a 5x mean experiment. Defaults to False.
     """
 
-    X, aug, hcf, y, subjects = prepare_data(X, y, subjects, clf.param)
+    X, y, hcf, subjects = prepare_data(X, y, subjects, clf.param)
 
     print("X shape after preprocessing: ", X.shape)
-    #y = np.argmax(y, axis=1)
     print("y shape after preprocessing: ", y.shape)
-    print("HCF shape after preprocessing: ", hcf.shape)
+
+    if hcf is not None:
+        print("HCF shape after preprocessing: ", hcf.shape)
 
     if rfe:
-        return rfe_loso(X, aug, hcf, y, subjects, clf)
+        return rfe_loso(X, y, hcf, subjects, clf)
     else:
         if five_times:
-            return five_loso(X, aug, hcf, y, subjects, clf, output_csv = Path("results", "5_loso_{}.csv".format(name)))
+            return five_loso(X, y, hcf, subjects, clf, output_csv = Path("results", "5_loso_{}.csv".format(name)))
         else:
-            return loso_cross_validation(X, aug, aug_method , hcf, y, subjects, clf, output_csv = Path("results", "{}.csv".format(name)))
+            return loso_cross_validation(X, y, hcf, subjects, clf, output_csv = Path("results", "{}.csv".format(name)))
 
 def check_simple_metrics():
     print("Checking simplistic metrics...")
@@ -199,6 +239,12 @@ def check_gpu():
 if __name__ == "__main__":
     """Main function.
     """
+
+    # set CWD to file location
+    abspath = os.path.abspath(__file__)
+    dname = os.path.dirname(abspath)
+    os.chdir(dname)
+
     tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
     # Simple metrics
@@ -259,11 +305,11 @@ if __name__ == "__main__":
     param.update({"epochs": 100, "bs": 32, "lr": 0.0001, "smooth": 256, "resample": 256, "dense_out": 100, "minmax_norm": True})
 
     for clf in [mlp]:
-         for aug_method in ["jitter", "scaling"]:
-            try:
-                param["aug"] = aug_method
-                conduct_experiment(X.copy(), aug_method, y.copy(), subjects.copy(), clf= clf(param.copy()), name= param["dataset"], five_times= False, rfe= False)
-            except Exception as e:
-                print(e)
-
-    
+         for aug_factor in [2, 3]:
+            for aug_method in ["crop"]:
+                try:
+                    param["aug_factor"] = aug_factor
+                    param["aug_method"] = aug_method
+                    conduct_experiment(X.copy(), y.copy(), subjects.copy(), clf= clf(param.copy()), name= param["dataset"], five_times= False, rfe= False)
+                except Exception as e:
+                    print(e)
