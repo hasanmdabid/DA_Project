@@ -107,7 +107,17 @@ def prepare_data(X, y, subjects, param):
         if param["aug_method"] == "crop":
             augmenter = (Crop(size= 1408) * param["aug_factor"]) 
         elif param["aug_method"] == "jitter":
-            augmenter = (AddNoise(loc=0.0, scale=0.1, distr='gaussian', kind='additive') * param["aug_factor"])
+            augmenter = (AddNoise(loc=0.0, scale=0.2, distr='gaussian', kind='additive') * param["aug_factor"])
+        elif param["aug_method"] == "timewarp":
+            augmenter = (TimeWarp() * param["aug_factor"])
+        elif param["aug_method"] == "convolve":
+            augmenter = (Convolve(window="flattop", size=16) * param["aug_factor"])
+        elif param["aug_method"] == "rotation":
+            augmenter = (Reverse() @ 0.5 * param["aug_factor"])
+        elif param["aug_method"] == "quantize":
+            augmenter = (Quantize(n_levels=[10, 20, 30]) * param["aug_factor"])
+        elif param["aug_method"] == "drift":
+            augmenter = (Drift(max_drift=(0.1, 0.5)) @ 0.8 * param["aug_factor"]) 
         else:
             raise NotImplementedError(f"Augmentation method '{param['aug_method']}' is not available.")
 
@@ -308,8 +318,8 @@ if __name__ == "__main__":
     param.update({"epochs": 100, "bs": 32, "lr": 0.0001, "smooth": 256, "resample": 256, "dense_out": 100, "minmax_norm": True})
 
     for clf in [mlp]:
-         for aug_factor in [2, 3]:
-            for aug_method in ["crop"]:
+         for aug_factor in range(1, 11):
+            for aug_method in ["crop","jitter", "timewarp", "convolve", "rotation", "quantize", "drift"]:
                 try:
                     param["aug_factor"] = aug_factor
                     param["aug_method"] = aug_method
