@@ -340,12 +340,13 @@ def loso_cross_validation(X, y, hcf, subjects, clf, output_csv = Path("results",
         clf.param["rfe_features"] = list(set(clf.param["rfe_features"]))
 
     aug_method = clf.param["aug_method"]
+    aug_factor = clf.param["aug_factor"]
 
-    save_data(clf, aug_method, output_csv, start_date, start_time, all_fscores, all_accs, df_importance, save_model_summary)
+    save_data(clf, aug_method, aug_factor, output_csv, start_date, start_time, all_fscores, all_accs, df_importance, save_model_summary)
 
     return 	all_fscores, all_accs, all_predictions, all_actuals
 
-def save_data(clf, aug_method,  output_csv, start_date, start_time, all_fscores, all_accs, df_importance, save_model_summary):
+def save_data(clf, aug_method, aug_factor, output_csv, start_date, start_time, all_fscores, all_accs, df_importance, save_model_summary):
     # create output directory if does not exist
     output_dir = output_csv.parent
     if not output_dir.exists():
@@ -359,14 +360,14 @@ def save_data(clf, aug_method,  output_csv, start_date, start_time, all_fscores,
     df.loc[0, "Duration"]= str(now_date-start_date).split('.')[0]
     df.loc[0, "Net"]= clf.name
     df.loc[0, "Aug_method"]= aug_method
-    #df.loc[0, "Aug_factor"]= aug_factor
+    df.loc[0, "Aug_factor"]= aug_factor
     df.loc[0, "F1 mean"] = round(np.nanmean(all_fscores) * 100, 2)
     df.loc[0, "F1 std"] = round(np.std(all_fscores) * 100, 2)
     df.loc[0, "Accuracy mean"] = round(np.nanmean(all_accs) * 100, 2)
     df.loc[0, "Accuracy std"] = round(np.std(all_accs) * 100, 2)
-    #df.loc[0, "F1"] = str(all_fscores)
-    #df.loc[0, "Accs"] = str(all_accs)
-    #df.loc[0, "Param"] = str(sorted(clf.param.items()))
+    df.loc[0, "F1"] = str(all_fscores)
+    df.loc[0, "Accs"] = str(all_accs)
+    df.loc[0, "Param"] = str(sorted(clf.param.items()))
     
     df.to_csv(output_csv, sep= ";", mode='a', decimal=',', index= False, header= not output_csv.exists())
 
@@ -421,7 +422,7 @@ def five_loso(X, y, hcf, subjects, clf, runs= 5, output_csv = Path("results", "5
     all_actuals = []
 
     for i in tqdm(np.arange(runs)):
-        fscores, accs, predictions, actuals = loso_cross_validation(X, aug, hcf, y, subjects, clf)
+        fscores, accs, predictions, actuals = loso_cross_validation(X, y, hcf, subjects, clf)
 
         acc_mean.append(np.nanmean(accs))
         acc_std.append(np.std(accs))

@@ -7,3 +7,6 @@ __pycache__/
 *.png
 Demo_uchida.py
 synthetic_data_generator.py
+*.csv
+BioVid/datasets/
+BioVid/results/
