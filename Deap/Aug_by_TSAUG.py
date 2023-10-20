@@ -51,13 +51,22 @@ x_train_raw, x_test, y_train_raw, y_test = train_test_split(combined_data_valenc
 print('X_train data shape Before Augmentation:', x_train_raw.shape)
 print('Y_train data shape Before Augmentation:', y_train_raw.shape)
 
-#***************To use the TSAUG algorithm the shape of the input is x = 3D(Nr. segents, row, column) 
-#***************y = 1D(Nr segments or labels) and Augmentaion factor (Integer value) 
+#***************To use the TSAUG algorithm the shape of the input is x = 3D(Nr.Samples, row, column) 
+#***************y = 3D(Nr samples, row, channels) and Augmentaion factor (Integer value) 
 
 x_aug, y_aug = seg_TSAUG.seg_TSAUG(x_train_raw, y_train_raw, Aug_factor)
 
+#The TSAUG algorithm use 3D (Nr. samples, time stamp, channels) format of both X and  y. So in seg_tsaug python file will 1st
+# convert the y into a 3D (Nr. samples, time stamp, channels) format. then use the different augmenters. 
+# The Augmenter will produce augmented data in 3D format both for X and y.
+
+#***************To use the TSAUG algorithm the shape of the output is x = 3D(Nr. segents, row, column) 
+#***************y = 3D(Nr. segents, row, channels)
+
+# At the end og the TSAUG algorithm, we converted the Y 3D (Nr. samples, timestamp, channels) format to 1D.
+
 print('X_Augmentation:', x_aug.shape) # Shape of x_aug is 3D
-print('Y_Augmentation:', y_aug.shape) # Shape of y_aug is 3D
+print('Y_Augmentation:', y_aug.shape) # Shape of y_aug is 1D
 
 # First we will convert the 3D array to 2D arrays.  Then we will add the labels infromation at the last column to form a 2D Augmented datset.
 x_aug_2d = x_aug.reshape(x_aug.shape[0]*x_aug.shape[1], x_aug.shape[2])  #Converting data from 3D to 2D

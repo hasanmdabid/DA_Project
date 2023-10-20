@@ -439,10 +439,12 @@ def five_loso(X, y, hcf, subjects, clf, runs= 5, output_csv = Path("results", "5
     df.loc[0, "End time"]= now_date
     df.loc[0, "Duration"]= str(now_date-start_date).split('.')[0]
     df.loc[0, "Net"]= clf.name
+    df.loc[0, "Max. acc mean "] = round(np.nanmax(acc_mean) * 100, 2)
     df.loc[0, "Avg. acc mean"] = round(np.nanmean(acc_mean) * 100, 2)
     df.loc[0, "Std. acc mean"] = round(np.std(acc_mean) * 100, 2)
     df.loc[0, "Avg. acc std"] = round(np.nanmean(acc_std) * 100, 2)
     df.loc[0, "Std. acc std"] = round(np.std(acc_std) * 100, 2)
+    df.loc[0, "Max. F1 mean"] = round(np.nanmax(f1_mean) * 100, 2)
     df.loc[0, "Avg. F1 mean"] = round(np.nanmean(f1_mean) * 100, 2)
     df.loc[0, "Std. F1 mean"] = round(np.std(f1_mean) * 100, 2)
     df.loc[0, "Avg. F1 std"] = round(np.nanmean(f1_std) * 100, 2)

@@ -13,7 +13,7 @@ from keras import layers
 import tensorflow.keras.backend as K
 from tensorflow.keras.models import Model
 from sklearn.feature_selection import RFE
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers.legacy import Adam
 from sklearn.ensemble import RandomForestRegressor
 
 from .data_handling import unison_shuffled

@@ -4,6 +4,13 @@ import utils.augmentation as aug
 
 # All the Function takes 3D input and outputs arrays are also 3D
 
+#***************To use the TSAUG algorithm the shape of the input is x = 3D(Nr. segents, row, column) 
+#***************y = 1D(Nr segments or labels)
+
+#***************To use the TSAUG algorithm the shape of the output is x = 3D(Nr. segents, row, column) 
+#***************y = 1D(Nr segments or labels)
+
+
 def slided_numpy_array(data):
 
     import numpy as np

@@ -18,6 +18,7 @@ from tsaug import TimeWarp, Crop, Quantize, Drift, Reverse, Convolve, Pool, AddN
 
 from hcf import get_hcf, moving_average
 from scripts.classifier import *
+from DTW import *
 from scripts.preprocessing import remove_ecg_wandering, preprocess_np
 from scripts.evaluation import loso_cross_validation, five_loso, accuracy, from_categorical, rfe_loso
 from scripts.data_handling import read_biovid_np, pick_classes, normalize, resample_axis, read_painmonit_np, normalize_features
@@ -88,11 +89,15 @@ def prepare_data(X, y, subjects, param):
         aug_factor_type = type(param["aug_factor"])
         if (aug_factor_type != int) and (aug_factor_type!= float):
             raise ValueError(f"Param 'aug_factor' should be numeric but received '{param['aug_factor']}' with type '{aug_factor_type}'.")
+        
+        print("Initial Data shapes")
+        print("X shape:", X.shape) #4D (3480,1408,1,1)
+        print("y shape:", y.shape) #2D (3480, 2)(After performing One hot encode)
 
         X_for_aug = X[:, :, :, 0]
 
         # convert from one-hot encoding
-        y_for_aug = np.argmax(y, axis= 1)
+        y_for_aug = np.argmax(y, axis= 1) #1D(3480,)
         # extend axis
         y_for_aug = np.expand_dims(y_for_aug, axis= -1)
         # repeat the value for the time series
@@ -100,9 +105,17 @@ def prepare_data(X, y, subjects, param):
         y_for_aug = np.expand_dims(y_for_aug, axis= -1)
 
         print("Data shapes before augmentation")
-        print("X shape:", X_for_aug.shape)
-        print("y shape:", y_for_aug.shape)
-
+        print("X shape:", X_for_aug.shape) #3D (3480,1408,1)
+        print("y shape:", y_for_aug.shape) #3D (3480,1408,1)
+        x_2d = X_for_aug.reshape(-1, X_for_aug.shape[-1])
+        y_2d = y_for_aug.reshape(-1, 1)
+        dataset = np.concatenate((x_2d, y_2d), axis=1)
+        print('Shape of the dataset=', dataset.shape) # 2D (4899840, 2)
+        
+        variable_type = type(X_for_aug)
+        print("The type of raw data is:", variable_type)
+        
+        """
         # TODO: implement more augmentation methods here options
         if param["aug_method"] == "crop":
             augmenter = (Crop(size= 1408) * param["aug_factor"]) 
@@ -117,17 +130,43 @@ def prepare_data(X, y, subjects, param):
         elif param["aug_method"] == "quantize":
             augmenter = (Quantize(n_levels=[10, 20, 30]) * param["aug_factor"])
         elif param["aug_method"] == "drift":
-            augmenter = (Drift(max_drift=(0.1, 0.5)) @ 0.8 * param["aug_factor"]) 
+            augmenter = (Drift(max_drift=(0.1, 0.5)) @ 0.8 * param["aug_factor"])
+        
+        x_aug, y_aug = augmenter.augment(X_for_aug, y_for_aug)
+        """
+        if param["aug_method"] == "DGW":
+            y_for_aug = np.argmax(y, axis= 1) #3D
+            print(y_for_aug.shape)
+            x_aug = []
+            y_aug = []
+            for _ in range(param["aug_factor"]):
+                augmented_data = DGW(X_for_aug, y_for_aug)
+                x_aug.append(augmented_data)
+                y_aug.append(y_for_aug)
         else:
             raise NotImplementedError(f"Augmentation method '{param['aug_method']}' is not available.")
+       
+       #-------------------------------------Conver the List object into Numpy arrays --------------------------------
+        variable_type = type(x_aug)
+        print("The type of Augmentation data is:", variable_type)
+        x_aug= np.array([x_aug], dtype=list)
+        y_aug= np.array(y_aug)
 
-        x_aug, y_aug = augmenter.augment(X_for_aug, y_for_aug)
+        print("Data Shape after augmenation:")
+        print("X shape:", x_aug.shape)
+        print("y shape:", y_aug.shape)
+        
+        np.savetxt(f"/home/abidhasan/Documents/DA_Project/BioVid/datasets/augmented_data/x_{param['aug_method']}_aug.txt", x_aug)
+        np.savetxt(f"/home/abidhasan/Documents/DA_Project/BioVid/datasets/augmented_data/y_{param['aug_method']}_aug.txt", y_aug)
+        
 
         # reconstruct original shape
         x_aug = np.expand_dims(x_aug, axis= -1)
 
         # y to one hot encoding
-        y_aug = to_categorical(y_aug[:, 0, 0])
+        
+        #y_aug = to_categorical(y_aug[:, 0, 0])
+        y_aug = to_categorical(y_aug)
 
         # extend subjects accordingly
         # TODO: check if this is correct
@@ -138,7 +177,7 @@ def prepare_data(X, y, subjects, param):
         y = np.concatenate([y, y_aug], axis= 0)
         subjects = np.concatenate([subjects, subjects_aug], axis= 0)
 
-        print("Shape of after augmenation:")
+        print("Data Shape after concatination with original and augmented data:")
         print("X shape:", X.shape)
         print("y shape:", y.shape)
         print("subjects shape:", subjects.shape)
@@ -318,11 +357,11 @@ if __name__ == "__main__":
     param.update({"epochs": 100, "bs": 32, "lr": 0.0001, "smooth": 256, "resample": 256, "dense_out": 100, "minmax_norm": True})
 
     for clf in [mlp]:
-         for aug_factor in range(1, 11):
-            for aug_method in ["crop","jitter", "timewarp", "convolve", "rotation", "quantize", "drift"]:
+         for aug_factor in [1,2]:
+            for aug_method in ['DGW']:
                 try:
                     param["aug_factor"] = aug_factor
                     param["aug_method"] = aug_method
-                    conduct_experiment(X.copy(), y.copy(), subjects.copy(), clf= clf(param.copy()), name= param["dataset"], five_times= False, rfe= False)
+                    conduct_experiment(X.copy(), y.copy(), subjects.copy(), clf= clf(param.copy()), name= param["dataset"], five_times= True, rfe= False)
                 except Exception as e:
                     print(e)

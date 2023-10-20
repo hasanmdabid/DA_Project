@@ -7,9 +7,9 @@ from keras.layers import BatchNormalization
 from keras.layers import Dense
 from keras.layers import Flatten
 from keras.layers import Dropout
-from keras.layers.convolutional import Conv1D, Conv2D, Conv3D
+from keras.layers import Conv1D, Conv2D, Conv3D
 from keras.layers import ConvLSTM2D, ConvLSTM1D
-from keras.layers.convolutional import MaxPooling1D, MaxPooling2D, AveragePooling2D
+from keras.layers import MaxPooling1D, MaxPooling2D, AveragePooling2D
 from keras.layers import LSTM, Lambda, Reshape
 
 

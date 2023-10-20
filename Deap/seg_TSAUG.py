@@ -42,7 +42,7 @@ def seg_TSAUG(x, y, Aug_factor):
     
     #************************************************************************************************
     # Case 1: If the Augmation unit is factor then x and y should be the concatination of x_original and x_aug 
-    # and y_original and y_aug respectively. The return shoild be x and labels_to_save
+    # and y_original and y_aug respectively. The return should be x and labels_to_save
     # Case 2: Whereas, if augmentation is fraction then return only x_aug and y_aug.
     #************************************************************************************************
     
@@ -60,3 +60,5 @@ def seg_TSAUG(x, y, Aug_factor):
 
     #return x_aug, y_aug
     return x, labels_to_save
+
+# Returns x = 3D, Y = 1D

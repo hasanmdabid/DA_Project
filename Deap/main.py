@@ -9,7 +9,6 @@ from keras.models import load_model
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 import tensorflow as tf
-from keras.constraints import MaxNorm
 from data_preprocessing import *
 from data_preprocessing_withscalling import *
 from models import *

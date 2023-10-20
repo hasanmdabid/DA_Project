@@ -53,7 +53,7 @@ print('Y_train data shape Before Augmentation:', y_train_raw.shape)
 
 #***************To use the DTW algorithm the shape of the input is x = 3D(Nr. segents, row, column) 
 #***************y = 1D(Nr segments or labels) and Augmentaion factor (Integer value) 
-Family_name = input('Mention the Family name ("TSAUG, "TW", "RTW", DTW"):')
+Family_name = input('Mention the Family name ("TW", "RTW", DTW"):')
 if Family_name == 'DTW':
       x_aug, y_aug = DTW(x_train_raw, y_train_raw)
       method = 'GuidedTimeWarp'
@@ -64,12 +64,14 @@ elif Family_name == 'TW':
       x_aug, y_aug = TW(x_train_raw, y_train_raw)
       method = 'TimeWarp'
 
+#***************To use the TSAUG algorithm the shape of the output is x = 3D(Nr. segents, row, column) 
+#***************y = 1D(Nr segments or labels)
 
 print('X_Augmentation:', x_aug.shape) # Shape of x_aug is 3D
 print('Y_Augmentation:', y_aug.shape) # Shape of y_aug is 1D
 
 x_aug_2d = x_aug.reshape(x_aug.shape[0]*x_aug.shape[1], x_aug.shape[2])  #Converting data from 3D to 2D
-y_aug_2d = np.expand_dims(y_aug, axis=1)                                 # Adding a dimension to convert it into 2D
+y_aug_2d = np.expand_dims(y_aug, axis=1)                                 # Adding a dimension to convert it FROM 1D to 2D
 y_aug_2d = np.repeat(y_aug_2d, 128, axis=0)                              # Converting the labels into total number (128) of time stamp
 
 
@@ -93,7 +95,7 @@ for i in np.arange(0.2, 1, 0.2):
       print(Aug_downsample.shape)
 
       #---------------------------------------------------Converting the Labels into 1D array------------------------------------------------
-      # This part of code will 1st selec the Number of samples  will 
+      # This part of code will 1st selec the Number of samples
       Aug_frac_x, Aug_frac_y = slided_numpy_array.slided_numpy_array(Aug_downsample)
       print('Shape of training Augmented data with fractional amount:',Aug_frac_x.shape)
       print('Shape of training Augmented data with fractional amount:',Aug_frac_y.shape)
