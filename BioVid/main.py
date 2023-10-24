@@ -12,7 +12,7 @@ import tensorflow as tf
 from pathlib import Path
 from scipy.stats import zscore
 from scripts.augmentation import augment
-
+from sklearn.utils import resample
 from tensorflow.python.keras.utils.np_utils import to_categorical
 from tsaug import TimeWarp, Crop, Quantize, Drift, Reverse, Convolve, Pool, AddNoise
 
@@ -107,70 +107,112 @@ def prepare_data(X, y, subjects, param):
         print("Data shapes before augmentation")
         print("X shape:", X_for_aug.shape) #3D (3480,1408,1)
         print("y shape:", y_for_aug.shape) #3D (3480,1408,1)
-        x_2d = X_for_aug.reshape(-1, X_for_aug.shape[-1])
-        y_2d = y_for_aug.reshape(-1, 1)
-        dataset = np.concatenate((x_2d, y_2d), axis=1)
-        print('Shape of the dataset=', dataset.shape) # 2D (4899840, 2)
         
-        variable_type = type(X_for_aug)
-        print("The type of raw data is:", variable_type)
+        if param["aug_method"] == "crop" or param["aug_method"] == "jitter"or param["aug_method"] == "timewarp" or  param["aug_method"] == "convolve" or param["aug_method"] == "rotation" or param["aug_method"] == "quantize" or param["aug_method"] == "drift":
+            # TODO: implement more augmentation methods here options
+            if param["aug_method"] == "crop":
+                augmenter = (Crop(size= 1408) * param["aug_factor"]) 
+            elif param["aug_method"] == "jitter":
+                augmenter = (AddNoise(loc=0.0, scale=0.2, distr='gaussian', kind='additive') * param["aug_factor"])
+            elif param["aug_method"] == "timewarp":
+                augmenter = (TimeWarp() * param["aug_factor"])
+            elif param["aug_method"] == "convolve":
+                augmenter = (Convolve(window="flattop", size=16) * param["aug_factor"])
+            elif param["aug_method"] == "rotation":
+                augmenter = (Reverse() @ 0.5 * param["aug_factor"])
+            elif param["aug_method"] == "quantize":
+                augmenter = (Quantize(n_levels=[10, 20, 30]) * param["aug_factor"])
+            elif param["aug_method"] == "drift":
+                augmenter = (Drift(max_drift=(0.1, 0.5)) @ 0.8 * param["aug_factor"])
+            
+            x_aug, y_aug = augmenter.augment(X_for_aug, y_for_aug)
+            x_aug = np.expand_dims(x_aug, axis= -1)
+            y_aug = to_categorical(y_aug[:, 0, 0])
         
-        """
-        # TODO: implement more augmentation methods here options
-        if param["aug_method"] == "crop":
-            augmenter = (Crop(size= 1408) * param["aug_factor"]) 
-        elif param["aug_method"] == "jitter":
-            augmenter = (AddNoise(loc=0.0, scale=0.2, distr='gaussian', kind='additive') * param["aug_factor"])
-        elif param["aug_method"] == "timewarp":
-            augmenter = (TimeWarp() * param["aug_factor"])
-        elif param["aug_method"] == "convolve":
-            augmenter = (Convolve(window="flattop", size=16) * param["aug_factor"])
-        elif param["aug_method"] == "rotation":
-            augmenter = (Reverse() @ 0.5 * param["aug_factor"])
-        elif param["aug_method"] == "quantize":
-            augmenter = (Quantize(n_levels=[10, 20, 30]) * param["aug_factor"])
-        elif param["aug_method"] == "drift":
-            augmenter = (Drift(max_drift=(0.1, 0.5)) @ 0.8 * param["aug_factor"])
-        
-        x_aug, y_aug = augmenter.augment(X_for_aug, y_for_aug)
-        """
-        if param["aug_method"] == "DGW":
-            y_for_aug = np.argmax(y, axis= 1) #3D
-            print(y_for_aug.shape)
-            x_aug = []
-            y_aug = []
-            for _ in range(param["aug_factor"]):
-                augmented_data = DGW(X_for_aug, y_for_aug)
-                x_aug.append(augmented_data)
-                y_aug.append(y_for_aug)
+        elif param["aug_method"] == "DGW" or param["aug_method"] == "RGW" or param["aug_method"] == "TW":
+            #-------------*********preparing the data for the DTW algorithm (Input is X_aug(3D), y(1D), output is X(3D), Y(1D))************** --------------------------
+            x_2d = X_for_aug.reshape(-1, X_for_aug.shape[-1]) #2D  (4899840, 1)
+            #print("x after converting 3d to 2d shape:", x_2d.shape)
+            y_2d = y_for_aug.reshape(-1, 1) #2D  (4899840, 1)
+            #print("y after converting 3d to 2d shape:", y_2d.shape)
+            dataset = np.concatenate((x_2d, y_2d), axis=1)
+            #print('Shape of the dataset=', dataset.shape) # 2D (4899840, 2)
+            
+            #-----------------------------------------Selectinf a certain amount of fractional data------------------------
+            Aug_frac = param["aug_factor"]  # Select the values of the augmatation fraction.
+            print('Augmentation Factor', Aug_frac)   
+            n_ecp_samples = math.ceil(dataset.shape[0]*Aug_frac) 
+            print('Shape of Number of Expected samples:', n_ecp_samples)
+
+            #---------------------------------------------------------------- Performing the Downsample With SKlearn----------------------------------------------------------------
+            # We applied resample() method from the sklearn.utils module for downsampling, The replace = True attribute performs random resampling with replacement. The n_samples attribute 
+            # defines the number of records you want to select from the original records. We have set the value of this attribute to the number of records in the spam dataset so the two sets will be balanced.
+            Aug_downsample = resample(dataset, replace=True, n_samples=n_ecp_samples)
+            print('Shape of Randomly selected data', Aug_downsample.shape)
+            
+            def slided_numpy_array(data, L, ov = 0 ):
+                import numpy as np
+                # This function will generate the 3D Data for the DEEP CNN model
+                # Input is a 2D array where the last column contains the labels information
+                # x = data.to_numpy()
+                def get_strides(a, L, ov):
+                    out = []
+
+                    for i in range(0, a.shape[0] - L + 1, L - ov):
+                        out.append(a[i : i + L, :])
+                    return np.array(out)
+                x = get_strides(data, L, ov)
+                segment_idx = 0  # Index for the segment dimension
+                nb_segments, nb_timestamps, nb_columns = x.shape
+                data_to_save = np.zeros((nb_segments, nb_timestamps, nb_columns - 1), dtype=np.float32)
+                labels_to_save = np.zeros(nb_segments, dtype=int)
+                
+                for i in range(0, nb_segments):
+                    data_3D = x[i][:][:]
+                    data_to_save[i] = data_3D[:, :-1]
+                    labels = data_3D[:, -1]
+                    labels = labels.astype("int")  # Convert labels to int to avoid typing issues
+                    values, counts = np.unique(labels, return_counts=True)
+                    labels_to_save[i] = values[np.argmax(counts)]
+
+                return data_to_save, labels_to_save
+            
+            x_frac_aug, y_frac_aug = slided_numpy_array(Aug_downsample, L= X_for_aug.shape[1], ov=0 )
+            #print('Shape of x for DTW input', x_frac_aug.shape)
+            #print('Shape of y for DTW input', y_frac_aug.shape)
+            # Augmenting the fractional data
+            if param["aug_method"] == "DGW":
+                x_aug, y_aug =  DGW(x_frac_aug, y_frac_aug) # shape of X_aug,y_aug is (3D, 1d). 
+            elif param["aug_method"] == "RGW":
+                x_aug, y_aug =  RGW(x_frac_aug, y_frac_aug) # shape of X_aug,y_aug is (3D, 1d).
+            elif param['TW'] == TW:
+                x_aug, y_aug = TW(x_frac_aug, y_frac_aug) # shape of X_aug,y_aug is (3D, 1d).
+            
+            x_aug = np.expand_dims(x_aug, axis= -1)
+            y_aug = to_categorical(y_aug)
+
         else:
             raise NotImplementedError(f"Augmentation method '{param['aug_method']}' is not available.")
        
        #-------------------------------------Conver the List object into Numpy arrays --------------------------------
-        variable_type = type(x_aug)
-        print("The type of Augmentation data is:", variable_type)
-        x_aug= np.array([x_aug], dtype=list)
-        y_aug= np.array(y_aug)
 
         print("Data Shape after augmenation:")
         print("X shape:", x_aug.shape)
         print("y shape:", y_aug.shape)
         
-        np.savetxt(f"/home/abidhasan/Documents/DA_Project/BioVid/datasets/augmented_data/x_{param['aug_method']}_aug.txt", x_aug)
-        np.savetxt(f"/home/abidhasan/Documents/DA_Project/BioVid/datasets/augmented_data/y_{param['aug_method']}_aug.txt", y_aug)
-        
-
-        # reconstruct original shape
-        x_aug = np.expand_dims(x_aug, axis= -1)
-
-        # y to one hot encoding
-        
-        #y_aug = to_categorical(y_aug[:, 0, 0])
-        y_aug = to_categorical(y_aug)
+        #np.savetxt(f"/home/abidhasan/Documents/DA_Project/BioVid/datasets/augmented_data/x_{param['aug_method']}_{param['aug_factor']}_aug.txt", x_aug)
+        #np.savetxt(f"/home/abidhasan/Documents/DA_Project/BioVid/datasets/augmented_data/y_{param['aug_method']}_aug.txt", y_aug)
 
         # extend subjects accordingly
         # TODO: check if this is correct
+        print('Data type of the Subjects:', type(subjects))
+        unique_valence, counts_valence = np.unique(subjects, return_counts=True)
+        print('Count of Subject:', np.asarray((unique_valence, counts_valence)).T)
         subjects_aug = np.repeat(subjects, repeats= param["aug_factor"])
+        unique_valence, counts_valence = np.unique(subjects_aug, return_counts=True)
+        print('Count of Subject:', np.asarray((unique_valence, counts_valence)).T)
+        print("shape of subject: ", subjects.shape)
+        print("shape of augmented subjects: ", subjects_aug.shape)
 
         # concatenate
         X = np.concatenate([X, x_aug], axis= 0)
@@ -186,7 +228,7 @@ def prepare_data(X, y, subjects, param):
 
     return X, y, hcf, subjects
 
-def conduct_experiment(X, y, subjects, clf, name, five_times= False, rfe= False):
+def conduct_experiment(X, y, subjects, clf, name, five_times= True, rfe= False):
     """ Method to conduct an experiment. Data to perform a ML task needs to be given.
 
     Args:
@@ -357,8 +399,8 @@ if __name__ == "__main__":
     param.update({"epochs": 100, "bs": 32, "lr": 0.0001, "smooth": 256, "resample": 256, "dense_out": 100, "minmax_norm": True})
 
     for clf in [mlp]:
-         for aug_factor in [1,2]:
-            for aug_method in ['DGW']:
+         for aug_method in ["RGW"]:
+            for aug_factor in [0.2, 1, 0.2]:
                 try:
                     param["aug_factor"] = aug_factor
                     param["aug_method"] = aug_method

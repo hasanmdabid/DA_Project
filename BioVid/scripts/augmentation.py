@@ -494,7 +494,8 @@ def discriminative_guided_warp(x, labels, batch_size=6, slope_constraint="symmet
     return ret
 
 def discriminative_guided_warp_shape(x, labels, batch_size=6, slope_constraint="symmetric", use_window=True):
-    return discriminative_guided_warp(x, labels, batch_size, slope_constraint, use_window, dtw_type="shape")
+    return discriminative_guided_warp(x, labels, batch_size, slope_constraint, use_window, 
+                                      _type="shape")
 
 #-------------------------------------------------------------------------------------------------------
 # Helper functions to apply on PainData

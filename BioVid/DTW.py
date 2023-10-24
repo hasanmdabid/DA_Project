@@ -13,11 +13,10 @@ import scripts.augmentation as aug
 #***************y = 1D(Nr segments or labels)
 
 def DGW(data, labels):   
-
     guided_DTW_1 = aug.discriminative_guided_warp(data, labels)
     return guided_DTW_1, labels
 
-def RTW(data, labels):
+def RGW(data, labels):
     guided_RTW_1 = aug.random_guided_warp(data, labels)
     return guided_RTW_1, labels
 
