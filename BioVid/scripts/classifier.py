@@ -88,7 +88,7 @@ class classifier(object):
 	def set_param(self, param):
 		self.param = param
 
-	def set_dataset(self, train_data, test_data, hcf_data, sub_data):
+	def set_dataset(self, train_data, test_data, hcf_data, sub_data, aug_train):
 
 		self.x_train = train_data[0]
 		self.y_train = train_data[1]
@@ -98,13 +98,18 @@ class classifier(object):
 		self.hcf_test = hcf_data[1]
 		self.sub_train = sub_data[0]
 		self.sub_test = sub_data[1]
+		self.aug_x_train = aug_train[0]
+		self.aug_y_train = aug_train[1]
 		assert self.x_train.shape[1:] == self.x_test.shape[1:]
 
 		self.num_classes = self.y_train.shape[1]
 		self.num_sensors = self.x_train.shape[2]
 
 	def data_processing(self):
-		pass
+		# If there is augmentation data, we extend 'train' with 'aug train'
+		if self.aug_x_train is not None and not np.array_equal(self.x_train, self.aug_x_train):
+			self.x_train = np.concatenate([self.x_train, self.aug_x_train], axis= 0)
+			self.y_train = np.concatenate([self.y_train, self.aug_y_train], axis= 0)
 
 	def return_dataset(self):
 		"""Function to retrieve the used dataset of the network.
