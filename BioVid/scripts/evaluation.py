@@ -399,7 +399,7 @@ def save_data(clf, aug_method, aug_factor, output_csv, start_date, start_time, a
             with open(model_summary_path, 'w') as f:
                 clf.model.summary(print_fn=lambda x: f.write(x + '\n'))
 
-def five_loso(X, y, hcf, subjects, clf, runs= 5, output_csv = Path("results", "5_loso.csv")):
+def five_loso(X, y, hcf, subjects, clf, aug_method, aug_factor, runs= 5, output_csv = Path("results", "5_loso.csv")):
     """Function to validate a keras model using a leave one subject out validation 5 times and computing the mean.
 
     Args:
@@ -439,6 +439,8 @@ def five_loso(X, y, hcf, subjects, clf, runs= 5, output_csv = Path("results", "5
     df.loc[0, "End time"]= now_date
     df.loc[0, "Duration"]= str(now_date-start_date).split('.')[0]
     df.loc[0, "Net"]= clf.name
+    df.loc[0, "Aug_method"]= aug_method
+    df.loc[0, "Aug_factor"]= aug_factor
     df.loc[0, "Max. acc mean "] = round(np.nanmax(acc_mean) * 100, 2)
     df.loc[0, "Avg. acc mean"] = round(np.nanmean(acc_mean) * 100, 2)
     df.loc[0, "Std. acc mean"] = round(np.std(acc_mean) * 100, 2)

@@ -19,15 +19,3 @@ plt.xticks(categories, fontsize=8, rotation = 45, fontstyle='italic', color = 'g
 plt.tight_layout()
 # Save the plot
 plt.savefig("/home/abidhasan/Documents/DA_Project/results/bar_plot.png", dpi = 300)
-
-X = (3480, 1408, 1, 1)
-indices = np.arange(len(X)) # [0, 1, 2, ..., 3379]
-mask = [: len(indices)*0.2]
-X[mask]
-subjects[mask]
-subjects = np.vstack([subjects, subject[mask]])
-X.shape = (3480*0.2, 1408, 1, 1)
-subjects = [1, 1, 1, 2, 2, 2, ..., 5, 5, 5]
-X[0]
-subjects[0]
-len(X) == len(y) == len(subjects)
