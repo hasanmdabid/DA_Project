@@ -229,70 +229,6 @@ def conduct_experiment(X, y, subjects, clf, name, five_times= True, rfe= False):
         else:
             return loso_cross_validation(X, y, hcf, subjects, clf, output_csv = Path("results", "{}.csv".format(name)))
 
-def check_simple_metrics():
-    print("Checking simplistic metrics...")
-
-    df = pd.DataFrame([])
-
-    # read in biovid
-    param = {
-        "dataset": "biovid",
-        "input_fs": sampling_rate_biovid,
-        "sensor_names": biovid_sensors,
-        "selected_sensors": ["gsr"],
-        "classes": [[0], [4]],
-    }
-    x_biovid, y_biovid, subjects_biovid = read_biovid_np()
-    x_biovid, _, hcf, y_biovid, subjects_biovid = prepare_data(x_biovid, y_biovid, subjects_biovid, param)
-    x_biovid = x_biovid.copy() # make variable available inside functions that are defined here
-    y_biovid = from_categorical(y_biovid)
-
-    # read in painmonit
-    param["dataset"]= "painmonit"
-    param["input_fs"] = sampling_rate_painmonit
-    param["sensor_names"] = painmonit_sensors
-    param["painmonit_label"]= "heater"
-    param["classes"]= [[0], [5]]
-    param["selected_sensors"]= ["Eda_RB"]
-    x_painmonit = None
-    x_painmonit, y_painmonit, subjects_painmonit = read_painmonit_np(label= param["painmonit_label"])
-    x_painmonit, _, hcf, y_painmonit, subjects_painmonit = prepare_data(x_painmonit, y_painmonit, subjects_painmonit, param)
-    x_painmonit = x_painmonit.copy() # make variable available inside functions that are defined here
-    y_painmonit = from_categorical(y_painmonit)
-
-    def evaluate_metric(metric_str):
-        """Function to evaluate a metric on the painmonit and biovid dataset.
-        The given `metric_str` will be applied in the template 'f"[{metric_str} for x in dataset[:, :, 0, 0]]"'.
-        Results will be saved in the df at locations '["Painmonit", metric_str]' and '["Biovid", metric_str]'.
-
-        Args:
-            metric_str (string): The metric to check. For example, "x[0] < x[-1]".
-        """
-        x_painmonit # make variable available for 'eval' call
-        x_biovid # make variable available for 'eval' call
-
-        # evaluate painmonit
-        pred_painmonit = eval(f"[{metric_str} for x in x_painmonit[:, :, 0, 0]]")
-        acc_painmonit = round(accuracy(pred_painmonit, y_painmonit) * 100, 2)
-
-        # evaluate biovid
-        pred_biovid = eval(f"[{metric_str} for x in x_biovid[:, :, 0, 0]]")
-        acc_biovid = round(accuracy(pred_biovid, y_biovid) * 100, 2)
-    
-        # save results
-        df.loc["Painmonit", metric_str] = acc_painmonit
-        df.loc["Biovid", metric_str] = acc_biovid
-
-    evaluate_metric(metric_str= "x[0] < x[-1]")
-    evaluate_metric(metric_str= "len(x) * (7/10) < np.argmax(x)")
-    evaluate_metric(metric_str= "len(x) * (1/3) < np.argmax(x) - np.argmin(x)")
-    evaluate_metric(metric_str= "len(x) * (1/4) < np.argmax(x) - np.argmin(x)")
-    evaluate_metric(metric_str= "0 < sum(x[1:] - x[:-1])")
-
-    # save table
-    print(df)
-    df.to_csv(Path("results", "simple_metrics.csv"), sep= ";", decimal= ",")
-
 def check_gpu():
 
     if 'linux' in platform.platform().lower():
@@ -313,9 +249,6 @@ if __name__ == "__main__":
     os.chdir(dname)
 
     tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-
-    # Simple metrics
-    #check_simple_metrics()
 
     #-------------------------------------------------------------------------------------------------------
     # Check if tensorflow is available
