@@ -91,7 +91,7 @@ def prepare_data(X, y, subjects, param):
         aug_factor_type = type(param["aug_factor"])
         if (aug_factor_type != int) and (aug_factor_type!= float):
             raise ValueError(f"Param 'aug_factor' should be numeric but received '{param['aug_factor']}' with type '{aug_factor_type}'.")
-        
+        print(aug_factor_type)
         print("Initial Data shapes")
         print("X shape:", X.shape) #4D (3480,1408,1,1)
         print("y shape:", y.shape) #2D (3480, 2)(After performing One hot encode)
@@ -100,6 +100,7 @@ def prepare_data(X, y, subjects, param):
 
         # convert from one-hot encoding
         y_for_aug = np.argmax(y, axis= 1) # 1D (3480,)
+        
         
         # TODO: clean augmentation process
         if param["aug_method"] == "crop" or param["aug_method"] == "jitter"or param["aug_method"] == "timewarp" or  param["aug_method"] == "convolve" or param["aug_method"] == "rotation" or param["aug_method"] == "quantize" or param["aug_method"] == "drift":
@@ -130,8 +131,17 @@ def prepare_data(X, y, subjects, param):
             elif param["aug_method"] == "drift":
                 augmenter = (Drift(max_drift=(0.1, 0.5)) @ 0.8 * param["aug_factor"])
             
-            x_aug, y_aug = augmenter.augment(X_for_aug, y_for_aug) # shape of X_aug,y_aug is (3D, 3D). 
-            subjects_aug = np.repeat(subjects, repeats= param["aug_factor"])
+            if param["aug_method"] >=1 :
+                x_aug, y_aug = augmenter.augment(X_for_aug, y_for_aug) # shape of X_aug,y_aug is (3D, 3D). 
+                subjects_aug = np.repeat(subjects, repeats= param["aug_factor"])
+            else: 
+                mask = int(param["aug_factor"] * X.shape[0])
+                x_frac_aug = X_for_aug[:mask]
+                y_frac_aug = y_for_aug[:mask]
+                #subjects = np.vstack([subjects, subjects_aug])
+                x_aug, y_aug = augmenter.augment(x_frac_aug, y_frac_aug) # shape of X_aug,y_aug is (3D, 3D). 
+                subjects_aug = subjects[:mask]
+            
             x_aug = np.expand_dims(x_aug, axis= -1) #4D
             y_aug = to_categorical(y_aug[:, 0, 0]) #2D (After performing One hot encode)
         
@@ -143,10 +153,9 @@ def prepare_data(X, y, subjects, param):
             else:                
                 mask = int(param["aug_factor"] * X.shape[0])
                 x_frac_aug = X_for_aug[:mask]
-                subjects_aug = subjects[:mask]
                 y_frac_aug = y_for_aug[:mask]
+                subjects_aug = subjects[:mask]
                 #subjects = np.vstack([subjects, subjects_aug])
-            
             
             if param["aug_method"] == "DGW":
                 if param["aug_factor"] == 2:
@@ -247,6 +256,7 @@ if __name__ == "__main__":
     # Configuration begin
     #------------------------------------------------------------------------------------------------------
     # biovid
+    """
     param= {
         "dataset": "biovid",
         "resample": 256, # Give sampling_rate to resample to
@@ -254,6 +264,15 @@ if __name__ == "__main__":
         "classes": [[0], [4]],
         #"aug": ["discriminative_guided_warp"]
     }
+    """
+
+    param= {
+        "dataset": "painmonit",
+        "resample": 256, # Give sampling_rate to resample to
+        "selected_sensors": ["Eda_RB"],
+        "classes": [[0], [4]],
+    }
+    
 
 
     sensor_names = []
@@ -268,7 +287,7 @@ if __name__ == "__main__":
         param["sensor_names"] = biovid_sensors
         param["input_fs"] = 512
     elif param["dataset"] == "painmonit":
-        param["painmonit_label"]= "heater" #or "covas"
+        param["painmonit_label"]= "covas" # or "heater"
         X, y, subjects = read_painmonit_np(label= param["painmonit_label"])
         param["sensor_names"] = painmonit_sensors
         param["input_fs"] = 250
@@ -293,8 +312,8 @@ if __name__ == "__main__":
     param.update({"epochs": 100, "bs": 32, "lr": 0.0001, "smooth": 256, "resample": 256, "dense_out": 100, "minmax_norm": True})
 
     for clf in [mlp]:
-         for aug_method in ["RGW", "DGW"]:
-            for aug_factor in [2]:
+         for aug_method in [None]:
+            for aug_factor in [None]:
                 
                 try:
                     param["aug_factor"] = aug_factor
