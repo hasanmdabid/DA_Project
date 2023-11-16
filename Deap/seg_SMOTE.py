@@ -1,6 +1,5 @@
 def seg_SMOTE():
     from collections import Counter
-    import smote_variants as sv
     import numpy as np
     import pandas as pd
     import statistics

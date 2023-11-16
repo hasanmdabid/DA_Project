@@ -10,3 +10,4 @@ synthetic_data_generator.py
 *.csv
 BioVid/datasets/
 BioVid/results/
+Opportunity/Related_paper/

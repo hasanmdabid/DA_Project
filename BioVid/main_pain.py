@@ -1,4 +1,6 @@
 import os
+
+from matplotlib import axis
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 # 0 - all logs shown
 # 1 - filter out INFO logs
@@ -80,13 +82,13 @@ def prepare_data(X, y, subjects, param):
     if "znorm" in param and param["znorm"]:
         X = zscore(X, axis= 1)
 
-    # ------------------------------------------ Generic
+    # ------------------------------------------ Generic--------------------------------------------------------------------------------
     # select classes
     if "classes" in param and param["classes"] is not None:
         # select certain classes from the data
         X, hcf, subjects, y = pick_classes(data = [X, hcf, subjects], y= y, classes = param["classes"], input_is_categorical= True)
 
-    # ------------------------------------------ Augmentation
+    # ------------------------------------------ Augmentation---------------------------------------------------------------------------
     if (("aug_factor" in param) and (param["aug_factor"] is not None) and
         ("aug_method" in param) and (param["aug_method"] is not None)):
         aug_factor_type = type(param["aug_factor"])
@@ -94,32 +96,62 @@ def prepare_data(X, y, subjects, param):
             raise ValueError(f"Param 'aug_factor' should be numeric but received '{param['aug_factor']}' with type '{aug_factor_type}'.")
         print(aug_factor_type)
         print("Initial Data shapes")
-        print("X shape:", X.shape) #4D (3480,1408,1,1)
-        print("y shape:", y.shape) #2D (3480, 2)(After performing One hot encode)
+        print("X shape:", X.shape) #4D (1293, 2560, 1, 1)
+        print("y shape:", y.shape) #2D (1293, 2)(After performing One hot encode)
+        print("Shape of the Subjects: ",  subjects.shape)
 
-        X_for_aug = X[:, :, :, 0] # 3D  (Converting 4D to 3D array-- (3480,1408,1)
+        X_for_aug = X[:, :, :, 0] # 3D  (Converting 4D to 3D array-- (1293, 2560, 1)
 
         # convert from one-hot encoding
-        y_for_aug = np.argmax(y, axis= 1) # 1D (3480,)
-        
-        
-        # TODO: clean augmentation process
-        if param["aug_method"] == "crop" or param["aug_method"] == "jitter" or  param["aug_method"] == "convolve" or param["aug_method"] == "rotation" or param["aug_method"] == "quantize" or param["aug_method"] == "drift":
-            
-            # To use "TSAUG" python DA library the infut format ox and y is 3D (Nr. of samples, Timesstamp, channels)
-            # # extend Dimension axis
-            y_for_aug = np.expand_dims(y_for_aug, axis= -1)
-            # repeat the value for the time series
-            y_for_aug = np.repeat(y_for_aug, repeats= X.shape[1], axis=1)
-            y_for_aug = np.expand_dims(y_for_aug, axis= -1)
+        y_for_aug = np.argmax(y, axis= 1) # 1D (1293)
 
-            print("Data shapes before augmentation")
-            print("X shape:", X_for_aug.shape) #3D (3480,1408,1)
-            print("y shape:", y_for_aug.shape) #3D (3480,1408,1)
-            
+        indices_0 = np.where(y_for_aug == 0)[0]
+        indices_1 = np.where(y_for_aug == 1)[0]
+        x_major = X_for_aug[indices_0]
+        y_major = y_for_aug[indices_0]
+        x_minor = X_for_aug[indices_1]
+        y_minor = y_for_aug[indices_1]
+        
+        print("Shape of x major and minor data: ", x_major.shape, x_minor.shape) # 3D
+        print("Shape of y major & minor indices: ", y_major.shape, y_minor.shape) #1D
+        
+        """
+        # Find unique labels and their counts
+        unique_labels, counts = np.unique(y_for_aug, return_counts=True)
+        # Display the total quantity of each label
+        for label, count in zip(unique_labels, counts):
+            print(f"Label {label}: {count} occurrences")
+        unique_labels, counts = np.unique(y_minor, return_counts=True)
+        # Display the total quantity of each label
+        for label, count in zip(unique_labels, counts):
+            print(f"Label {label}: {count} occurrences")
+        unique_labels, counts = np.unique(subjects, return_counts=True)
+        # Display the total quantity of each label
+        for label, count in zip(unique_labels, counts):
+            print(f"Label {label}: {count} occurrences")
+        """
+
+  
+        # TODO: clean augmentation process
+
+        if param["aug_method"] == "crop" or param["aug_method"] == "tw" or param["aug_method"] == "jitter" or  param["aug_method"] == "convolve" or param["aug_method"] == "rotation" or param["aug_method"] == "quantize" or param["aug_method"] == "drift":
+
+            # To use "TSAUG" python DA library the infut format of x and y is 3D (Nr. of samples, Timesstamp, channels)
+            # extend Dimension axis
+            y_minor = np.expand_dims(y_minor, axis= -1)
+            # repeat the value for the time series
+            y_minor = np.repeat(y_minor, repeats= X.shape[1], axis=1)
+            y_minor = np.expand_dims(y_minor, axis= -1)
+
+            print("Minor Data (1) shapes before augmentation")
+            print("X shape:", x_minor.shape) #3D ((252, 2560, 1))
+            print("y shape:", y_minor.shape) #3D ((252, 2560, 1))
+
             if param["aug_factor"] <1:
                 if param["aug_method"] == "crop":
                     augmenter = (Crop(size= 1408) * 1 )
+                elif param["aug_method"] == "tw":
+                    augmenter = (TimeWarp() * 1 )
                 elif param["aug_method"] == "jitter":
                     augmenter = (AddNoise(loc=0.0, scale=0.2, distr='gaussian', kind='additive') * 1)
                 elif param["aug_method"] == "convolve":
@@ -130,19 +162,22 @@ def prepare_data(X, y, subjects, param):
                     augmenter = (Quantize(n_levels=[10, 20, 30]) * 1)
                 elif param["aug_method"] == "drift":
                     augmenter = (Drift(max_drift=(0.1, 0.5)) @ 0.8 * 1)
-                      
-                x_aug, y_aug = augmenter.augment(X_for_aug, y_for_aug) # shape of X_aug,y_aug is (3D, 3D). 
-                
-                mask = int(param["aug_factor"] * X.shape[0])
+
+                x_aug, y_aug = augmenter.augment(x_minor, y_minor) # shape of X_aug,y_aug is (3D, 3D).
+
+                mask = int(param["aug_factor"] * x_minor.shape[0])
                 x_aug = x_aug[:mask] # 3D
                 y_aug = y_aug[:mask] # 3D
                 subjects_aug = subjects[:mask]
-                
+
             else:
                 if param["aug_method"] == "crop":
-                    augmenter = (Crop(size= 1408) * param["aug_factor"]) 
+                    augmenter = (Crop(size= 1408) * param["aug_factor"])
                 elif param["aug_method"] == "jitter":
                     augmenter = (AddNoise(loc=0.0, scale=0.2, distr='gaussian', kind='additive') * param["aug_factor"])
+                elif param["aug_method"] == "tw":
+                    augmenter = (TimeWarp() * param["aug_factor"])
+
                 elif param["aug_method"] == "convolve":
                     augmenter = (Convolve(window="flattop", size=16) * param["aug_factor"])
                 elif param["aug_method"] == "rotation":
@@ -151,58 +186,108 @@ def prepare_data(X, y, subjects, param):
                     augmenter = (Quantize(n_levels=[10, 20, 30]) * param["aug_factor"])
                 elif param["aug_method"] == "drift":
                     augmenter = (Drift(max_drift=(0.1, 0.5)) @ 0.8 * param["aug_factor"])
-                    
-                x_aug, y_aug = augmenter.augment(X_for_aug, y_for_aug) # shape of X_aug,y_aug is (3D, 3D). 
-                subjects_aug = np.repeat(subjects, repeats= param["aug_factor"])
-            
+
+                x_aug, y_aug = augmenter.augment(x_minor, y_minor) # shape of X_aug,y_aug is (3D, 3D).
+                mask = int(param["aug_factor"] * x_minor.shape[0])
+                subjects_aug = subjects[:mask]
+                #subjects_aug = np.repeat(subjects, repeats= param["aug_factor"])
+
             x_aug = np.expand_dims(x_aug, axis= -1) #4D
             y_aug = to_categorical(y_aug[:, 0, 0]) #2D (After performing One hot encode)
-        
+            
+
         elif param["aug_method"] == "DGW" or param["aug_method"] == "RGW" or param["aug_method"] == "TW":
 
         # Calculate the number of samples to select (20% of the total samples)
-            if param["aug_factor"] == 2:
-                subjects_aug = np.repeat(subjects, repeats= param["aug_factor"])
-            else:                
-                mask = int(param["aug_factor"] * X.shape[0])
-                x_frac_aug = X_for_aug[:mask]
-                y_frac_aug = y_for_aug[:mask]
+            if param["aug_factor"] <1:
+                mask = int(param["aug_factor"] * x_minor.shape[0])
+                x_frac_aug = x_minor[:mask]
+                y_frac_aug = y_minor[:mask]
                 subjects_aug = subjects[:mask]
                 #subjects = np.vstack([subjects, subjects_aug])
+                if param["aug_method"] == "TW":
+                    x_aug, y_aug = TW(x_frac_aug, y_frac_aug) # shape of x_frac_aug, y_frac_aug is (3D, 1D) and X_aug,y_aug is (3D, 1d).
+                elif param["aug_method"] == "RGW":
+                    x_aug, y_aug =  RGW(x_frac_aug, y_frac_aug) # shape of x_frac_aug, y_frac_aug is (3D, 1D) and X_aug,y_aug is (3D, 1d).
+                elif param["aug_method"] == "DGW":
+                    x_aug, y_aug =  DGW(x_frac_aug, y_frac_aug) # shape of x_frac_aug, y_frac_aug is (3D,1D) and X_aug,y_aug is (3D, 1d).
+                   
+            elif param["aug_factor"] == 1:
+                if param["aug_method"] == "TW":
+                    x_aug, y_aug = TW(x_minor, y_minor) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                elif param["aug_method"] == "RGW":
+                    x_aug, y_aug =  RGW(x_minor, y_minor) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                elif param["aug_method"] == "DGW":
+                     x_aug, y_aug =  DGW(x_minor, y_minor) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                mask = int(param["aug_factor"] * x_minor.shape[0])
+                subjects_aug = subjects[:mask]
             
-            if param["aug_method"] == "DGW":
-                if param["aug_factor"] == 2:
-                    x_aug_1, y_aug_1 = DGW(X_for_aug, y_for_aug) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
-                    x_aug_2, y_aug_2 = DGW(X_for_aug, y_for_aug) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
-                    x_aug, y_aug = np.concatenate([x_aug_1, x_aug_2], axis= 0), np.concatenate([y_aug_1, y_aug_2], axis= 0)
-                else:
-                    x_aug, y_aug =  DGW(x_frac_aug, y_frac_aug) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d). 
-            elif param["aug_method"] == "RGW":
-                if param["aug_factor"] == 2:
-                    x_aug_1, y_aug_1 = RGW(X_for_aug, y_for_aug) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
-                    x_aug_2, y_aug_2 = RGW(X_for_aug, y_for_aug) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
-                    x_aug, y_aug = np.concatenate([x_aug_1, x_aug_2], axis= 0), np.concatenate([y_aug_1, y_aug_2], axis= 0)
-                else:
-                    x_aug, y_aug =  RGW(x_frac_aug, y_frac_aug) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
-            elif param['aug_method'] == 'TW':
-                if param["aug_factor"] == 2:
-                    x_aug_1, y_aug_1 = TW(X_for_aug, y_for_aug) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
-                    x_aug_2, y_aug_2 = TW(X_for_aug, y_for_aug) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
-                    x_aug, y_aug = np.concatenate([x_aug_1, x_aug_2], axis= 0), np.concatenate([y_aug_1, y_aug_2], axis= 0)
-                else:
-                    x_aug, y_aug = TW(x_frac_aug, y_frac_aug) # shape ofx_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+            elif param["aug_factor"] == 2:
+                if param["aug_method"] == "TW":
+                    x_aug_1, y_aug_1 = TW(x_minor, y_minor)
+                    x_aug_2, y_aug_2 = TW(x_minor, y_minor)
+                elif param["aug_method"] == "RGW":
+                    x_aug_1, y_aug_1 = RGW(x_minor, y_minor)
+                    x_aug_2, y_aug_2 = RGW(x_minor, y_minor)
+                elif param["aug_method"] == "DGW":
+                    x_aug_1, y_aug_1 = RGW(x_minor, y_minor)
+                    x_aug_2, y_aug_2 = RGW(x_minor, y_minor)
+                x_aug = np.concatenate([x_aug_1, x_aug_2], axis=0)
+                y_aug = np.concatenate([y_aug_1, y_aug_2], axis=0)
+                mask = int(param["aug_factor"] * x_minor.shape[0])
+                subjects_aug = subjects[:mask]
             
+            elif param["aug_factor"] == 3:
+                if param["aug_method"] == "TW":
+                    x_aug_1, y_aug_1 = TW(x_minor, y_minor)
+                    x_aug_2, y_aug_2 = TW(x_minor, y_minor)
+                    x_aug_3, y_aug_3 = TW(x_minor, y_minor)
+                elif param["aug_method"] == "RGW":
+                    x_aug_1, y_aug_1 = RGW(x_minor, y_minor)
+                    x_aug_2, y_aug_2 = RGW(x_minor, y_minor)
+                    x_aug_3, y_aug_3 = RGW(x_minor, y_minor)
+                elif param["aug_method"] == "DGW":
+                    x_aug_1, y_aug_1 = DGW(x_minor, y_minor)
+                    x_aug_2, y_aug_2 = DGW(x_minor, y_minor)
+                    x_aug_3, y_aug_3 = DGW(x_minor, y_minor)
+                x_aug = np.concatenate([x_aug_1, x_aug_2, x_aug_3], axis=0)
+                y_aug = np.concatenate([y_aug_1, y_aug_2, y_aug_3], axis=0)
+                mask = int(param["aug_factor"] * x_minor.shape[0])
+                subjects_aug = subjects[:mask]
+                
+            elif param["aug_factor"] == 4:
+                if param["aug_method"] == "TW":
+                    x_aug_1, y_aug_1 = TW(x_minor, y_minor)
+                    x_aug_2, y_aug_2 = TW(x_minor, y_minor)
+                    x_aug_3, y_aug_3 = TW(x_minor, y_minor)
+                    x_aug_4, y_aug_4 = TW(x_minor, y_minor)
+                elif param["aug_method"] == "RGW":
+                    x_aug_1, y_aug_1 = RGW(x_minor, y_minor)
+                    x_aug_2, y_aug_2 = RGW(x_minor, y_minor)
+                    x_aug_3, y_aug_3 = RGW(x_minor, y_minor)
+                    x_aug_4, y_aug_4 = RGW(x_minor, y_minor)
+                elif param["aug_method"] == "DGW":
+                    x_aug_1, y_aug_1 = DGW(x_minor, y_minor)
+                    x_aug_2, y_aug_2 = DGW(x_minor, y_minor)
+                    x_aug_3, y_aug_3 = DGW(x_minor, y_minor)
+                    x_aug_4, y_aug_4 = DGW(x_minor, y_minor)
+                x_aug = np.concatenate([x_aug_1, x_aug_2, x_aug_3, x_aug_4], axis=0)
+                y_aug = np.concatenate([y_aug_1, y_aug_2, y_aug_3, y_aug_4], axis=0)
+                mask = int(param["aug_factor"] * x_minor.shape[0])
+                subjects_aug = subjects[:mask]
+                
+                     
             x_aug = np.expand_dims(x_aug, axis= -1) #4D
             y_aug = to_categorical(y_aug)           #2D (After performing One hot encode)
 
-    
-        print("Data Shape after augmenation:")
+
+        print("Minor Data Shape after augmenation:")
         print("X shape:", x_aug.shape)
         print("y shape:", y_aug.shape)
         print("subjects shape:", subjects_aug.shape)
-        
-        #np.savetxt(f"/home/abidhasan/Documents/DA_Project/BioVid/datasets/augmented_data/x_{param['aug_method']}_{param['aug_factor']}_aug.txt", x_aug)
-        #np.savetxt(f"/home/abidhasan/Documents/DA_Project/BioVid/datasets/augmented_data/y_{param['aug_method']}_aug.txt", y_aug)
+
+        #np.savetxt(f"/home/abidhasan/Documents/DA_Project/painmonit/datasets/augmented_data/x_{param['aug_method']}_{param['aug_factor']}_aug.txt", x_aug)
+        #np.savetxt(f"/home/abidhasan/Documents/DA_Project/painmonit/datasets/augmented_data/y_{param['aug_method']}_aug.txt", y_aug)
 
         # TODO: probably you want to remove code related to "HCF" everywhere
         hcf = None
@@ -223,8 +308,8 @@ def conduct_experiment(X, y, subjects, clf, name, five_times= True):
 
     X, y, aug, hcf, subjects = prepare_data(X, y, subjects, clf.param)
 
-    print("X shape after preprocessing: ", X.shape)
-    print("y shape after preprocessing: ", y.shape)
+    #print("X shape after preprocessing: ", X.shape)
+    #print("y shape after preprocessing: ", y.shape)
 
     if hcf is not None:
         print("HCF shape after preprocessing: ", hcf.shape)
@@ -263,24 +348,14 @@ if __name__ == "__main__":
     #-------------------------------------------------------------------------------------------------------
     # Configuration begin
     #------------------------------------------------------------------------------------------------------
-    # biovid
-    """
-    param= {
-        "dataset": "biovid",
-        "resample": 256, # Give sampling_rate to resample to
-        "selected_sensors": ["gsr"],
-        "classes": [[0], [4]],
-        #"aug": ["discriminative_guided_warp"]
-    }
-    """
+    # painmonit
+   
     param= {
         "dataset": "painmonit",
         "resample": 256, # Give sampling_rate to resample to
         "selected_sensors": ["Eda_RB"],
         "classes": [[0], [4]],
     }
-    
-    
 
 
     sensor_names = []
@@ -316,16 +391,15 @@ if __name__ == "__main__":
     print(subjects.shape)
     print("\n")
 
-       # Deep learning
+    # Deep learning
     param.update({"epochs": 100, "bs": 32, "lr": 0.0001, "smooth": 256, "resample": 256, "dense_out": 100, "minmax_norm": True})
-
     for clf in [mlp]:
-         for aug_method in ["jitter"]:
-            for aug_factor in [0.2, 0.4, 0.6, 0.8]:
-                
+        for aug_method in ["RGW", "DGW"]:
+            for aug_factor in [0.2, 0.4, 0.6, 0.8, 1, 2, 3, 4]:
                 try:
                     param["aug_factor"] = aug_factor
                     param["aug_method"] = aug_method
                     conduct_experiment(X.copy(), y.copy(), subjects.copy(), clf= clf(param.copy()), name= param["dataset"], five_times= True)
                 except Exception as e:
                     print(e)
+                    
