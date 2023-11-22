@@ -1,12 +1,12 @@
-def data_pre_pro_without_scalling():
+def data_pre_pro_with_scalling():
     import pickle
     import pandas as pd
     import numpy as np
     import matplotlib.pyplot as plt
     from sklearn.preprocessing import StandardScaler 
     import os.path
-    from pathlib import Path
-    import seg_TSAUG 
+    from pathlib import Path 
+    from slided_numpy_array import slided_numpy_array
 
     # ----------------------------------------------------------Loading the Data---------------------------------------------
     # The EEG and peripheral physiological signals of 32 participants were recorded as each watched 40 music videos.
@@ -20,7 +20,6 @@ def data_pre_pro_without_scalling():
         p = x.load()
         return p
 
-    # Load only 22/32 participants with frontal videos recorded
     files = []
     for n in range(1, 33):
         s = ''
@@ -53,18 +52,18 @@ def data_pre_pro_without_scalling():
 
     # Re-shape arrays into desired shapes
     labels = np.array(labels)
-    print(labels.shape)
+    print(labels.shape)                           #(32, 40, 4)
     labels = labels.flatten()
     labels = labels.reshape(1280, 4)
 
-    data = np.array(data)
-
+    data = np.array(data)  
+    print(data.shape)                             #(32, 40, 40, 8064)
     data = data.flatten()
     data = data.reshape(1280, 40, 8064)
 
     # Double-check the new arrays
     print("Raw Labels: ", labels.shape)  # trial x label
-    print("RawData: ", data.shape)  # trial x channel x data
+    print("Raw Data: ", data.shape)  # trial x channel x data
 
     # --------------------------------------Explore and pre-process data-----------------------------------------------------
     # Labels
@@ -173,20 +172,14 @@ def data_pre_pro_without_scalling():
     print('Counting the number of occurances of Arousal labels\n',df_arousal.value_counts())
     #print('Shape of Arousal labels:', df_arousal.shape)
 
-    # Now we will convert the label to 32*40 = 1280 (trials) * 8064 (data_samples) = 10321920
-    """
-    x = np.array([[1,2],[3,4], [5,6]])
-    print(x.shape)
-    x = np.repeat(x, 5, axis=0)
-    print(x.shape)
-    print(x)
-    """
+    # Now we will convert the label to 32*40 = 1280 (trials) * 8064 (data_samples = 63sec*128 Samples/Sec) = 10321920
+ 
     valence = np.repeat(np.array(df_valence), 8064, axis=0)  # Converting the labels into total number of time stamp
     # Converting the labels into total number of time stamp
     arousal = np.repeat(np.array(df_arousal), 8064, axis=0)
 
-    print('Now the shape of total Valance labels:', valence.shape)
-    print('Now the shape of total Arousal labels:', arousal.shape)
+    print('Now the shape of total Valance labels:', valence.shape) # Labels (valance)
+    print('Now the shape of total Arousal labels:', arousal.shape) #Labels (Arousal)
 
     # -----------------------------------------------------------EEG data----------------------------------------------------
     # -------------------------------------------Separate EEG and non-EEG data---------------------------------------------
@@ -217,11 +210,11 @@ def data_pre_pro_without_scalling():
 
     # Converting the data into (Samples, row, column) form.
 
-    eeg_data = eeg_data.transpose(0, 2, 1)
-    peripheral_data = peripheral_data.transpose(0, 2, 1)
+    eeg_data = eeg_data.transpose(0, 2, 1)                           #Only EEG data
+    peripheral_data = peripheral_data.transpose(0, 2, 1)             #Only Peripherial data
 
-    #print('Eeg data in samples, row, column formate:', eeg_data.shape)
-    #print('Peripheral data in samples, row, column formate:', peripheral_data.shape)
+    print('Eeg data in samples, row, column formate:', eeg_data.shape)   
+    print('Peripheral data in samples, row, column formate:', peripheral_data.shape)
 
     # --------------------------------------Sliding Window approach----------------------------------------------------------
 
@@ -234,7 +227,7 @@ def data_pre_pro_without_scalling():
     #print('EEG data in 2D', eeg_data.shape)
     #print('Peripheral data in 2D', peripheral_data.shape)
 
-    combined_data = np.hstack((eeg_data, peripheral_data))
+    combined_data = np.hstack((eeg_data, peripheral_data))         #Combined data of EEG and peripheral data
 
     print('Combined data:', combined_data.shape)
 
@@ -248,58 +241,30 @@ def data_pre_pro_without_scalling():
 
     eeg_valence = np.append(eeg_data, valence.reshape(valence.shape[0], 1), axis=1)
     eeg_arousal = np.append(eeg_data, arousal.reshape(arousal.shape[0], 1), axis=1)
-    #print('After the concatination shape of eeg and valance', eeg_valence.shape)
-    #print('After the concatination shape of eeg and arousal', eeg_arousal.shape)
+    print('After the concatination shape of eeg and valance', eeg_valence.shape)
+    print('After the concatination shape of eeg and arousal', eeg_arousal.shape)
 
     combined_data_valence = np.append(combined_data, valence.reshape(valence.shape[0], 1), axis=1)
     combined_data_arousal = np.append(combined_data, arousal.reshape(arousal.shape[0], 1), axis=1)
 
     print('After the concatination shape of combined and valance', combined_data_valence.shape)
     print('After the concatination shape of combined and arousal', combined_data_arousal.shape)
-
-    # This function will generate the slided Windowed Data
-    def slided_numpy_array(data):
-        # x = data.to_numpy()
-        def get_strides(a, L, ov):
-            out = []
-
-            for i in range(0, a.shape[0] - L + 1, L - ov):
-                out.append(a[i:i + L, :])
-            return np.array(out)
-
-        L = 128
-        ov = 0
-
-        # print('After Overlapping')
-        x = get_strides(data, L, ov)
-        # print(x.shape)
-
-        segment_idx = 0  # Index for the segment dimension
-        nb_segments, nb_timestamps, nb_columns = x.shape
-        data_to_save = np.zeros((nb_segments, nb_timestamps, nb_columns - 1), dtype=np.float32)
-        labels_to_save = np.zeros(nb_segments, dtype=int)
-
-        for i in range(0, nb_segments):
-            data = x[i][:][:]
-            data_to_save[i] = data[:, :-1]
-            #labels = x[i][:][:]
-            labels = data[:, -1]
-            # Convert labels to int to avoid typing issues
-            labels = labels.astype('int')
-            values, counts = np.unique(labels, return_counts=True)
-            labels_to_save[i] = values[np.argmax(counts)]
-
-        return data_to_save, labels_to_save
-    
-
     eeg_valence_slided, valence_slided = slided_numpy_array(eeg_valence)
     eeg_arousal_slided, arousal_slided = slided_numpy_array(eeg_arousal)
     combined_data_valence_slided, combined_valence_slided = slided_numpy_array(combined_data_valence)
     combined_data_arousal_slided, combined_arousal_slided = slided_numpy_array(combined_data_arousal)
     
     unique_valence, counts_valence = np.unique(combined_valence_slided, return_counts=True)
-    #print(np.asarray((unique_valence, counts_valence)).T)
+    print(np.asarray((unique_valence, counts_valence)).T)
     unique_arousal, counts_arousal = np.unique(arousal_slided, return_counts=True)
-    #print(np.asarray((unique_arousal, counts_arousal)).T)
+    print(np.asarray((unique_arousal, counts_arousal)).T)
 
     return eeg_valence_slided, valence_slided, eeg_arousal_slided, arousal_slided, combined_data_valence_slided, combined_valence_slided, combined_data_arousal_slided, combined_arousal_slided
+
+print(__name__)
+if __name__ == '__main__':
+    try:
+        eeg_valence_slided, valence_slided, eeg_arousal_slided, arousal_slided, combined_data_valence_slided, combined_valence_slided, combined_data_arousal_slided, combined_arousal_slided = data_pre_pro_without_scalling()
+    except:
+        print("Something went wrong")
+    

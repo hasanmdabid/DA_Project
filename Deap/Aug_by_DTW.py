@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 
 import tensorflow as tf
 from data_preprocessing import *
-from data_preprocessing_withscalling import *
+
 from models import *
 from save_result import *
 from sklearn.utils import resample
@@ -20,18 +20,27 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 
 
+
 # -------------------------------------------Importing the preprocessed data----------------
-eeg_valence_slided, valence_slided, eeg_arousal_slided, arousal_slided, combined_data_valence_slided, combined_valence_slided, combined_data_arousal_slided, combined_arousal_slided = data_pre_pro_without_scalling()
+eeg_valence_slided, valence_slided, eeg_arousal_slided, arousal_slided, combined_data_valence_slided, combined_valence_slided, combined_data_arousal_slided, combined_arousal_slided = data_pre_pro_with_scalling()
+
+
+
+
+
+
+
+
+# -------------------------------------------Importing the preprocessed data----------------
+eeg_valence_slided, valence_slided, eeg_arousal_slided, arousal_slided, combined_data_valence_slided, combined_valence_slided, combined_data_arousal_slided, combined_arousal_slided = data_pre_pro_with_scalling()
 
 print('Shape of eeg_valence_data:', eeg_valence_slided.shape)
 print('Shape of valence_labels:', valence_slided.shape)
 print('Shape o eeg_arousal_data:', eeg_arousal_slided.shape)
 print('Shape of arousal_labels:', arousal_slided.shape)
-print('Shape of combined_data_valence_slided:',
-      combined_data_valence_slided.shape)
+print('Shape of combined_data_valence_slided:',combined_data_valence_slided.shape)
 print('Shape of combined_valence_labels:', combined_valence_slided.shape)
-print('Shape of combined_data_arousal_slided:',
-      combined_data_arousal_slided.shape)
+print('Shape of combined_data_arousal_slided:', combined_data_arousal_slided.shape)
 print('Shape of combined_arousal_labels:', combined_arousal_slided.shape)
 
 

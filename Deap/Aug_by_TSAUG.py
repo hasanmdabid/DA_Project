@@ -36,7 +36,7 @@ print('Shape of combined_arousal_labels:', combined_arousal_slided.shape)
 
 
 # Considering only Valence
-method = 'Cropping'
+method = 'tw'
 activation = 'relu'
 init_mode = 'glorot_uniform'
 optimizer = 'Adam'

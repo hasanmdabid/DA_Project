@@ -273,6 +273,8 @@ if __name__ == "__main__":
         #"aug": ["discriminative_guided_warp"]
     }
     """
+    
+    # Painmonit
     param= {
         "dataset": "painmonit",
         "resample": 256, # Give sampling_rate to resample to
@@ -320,8 +322,8 @@ if __name__ == "__main__":
     param.update({"epochs": 100, "bs": 32, "lr": 0.0001, "smooth": 256, "resample": 256, "dense_out": 100, "minmax_norm": True})
 
     for clf in [mlp]:
-         for aug_method in ["jitter"]:
-            for aug_factor in [0.2, 0.4, 0.6, 0.8]:
+         for aug_method in ["crop", "jitter", "convolve", "rotation", "quantize", "drift", "TW", "DGW", "RGW"]:
+            for aug_factor in [0.2, 0.4, 0.6, 0.8, 1, 2]:
                 
                 try:
                     param["aug_factor"] = aug_factor

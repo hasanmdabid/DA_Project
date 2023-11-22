@@ -115,7 +115,7 @@ def prepare_data(X, y, subjects, param):
         print("Shape of x major and minor data: ", x_major.shape, x_minor.shape) # 3D
         print("Shape of y major & minor indices: ", y_major.shape, y_minor.shape) #1D
         
-        """
+        
         # Find unique labels and their counts
         unique_labels, counts = np.unique(y_for_aug, return_counts=True)
         # Display the total quantity of each label
@@ -128,8 +128,8 @@ def prepare_data(X, y, subjects, param):
         unique_labels, counts = np.unique(subjects, return_counts=True)
         # Display the total quantity of each label
         for label, count in zip(unique_labels, counts):
-            print(f"Label {label}: {count} occurrences")
-        """
+            print(f"Subject {label}: {count} occurrences")
+        
 
   
         # TODO: clean augmentation process

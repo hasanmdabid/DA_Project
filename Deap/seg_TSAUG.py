@@ -29,8 +29,8 @@ def seg_TSAUG(x, y, Aug_factor):
     y = y.reshape(y.shape[0], y.shape[1], 1) # Changing shape from 2D to 3D
 
     # -----------------Creating the augmenter class---------------------------------------------------
-    #time_augmenter = (TimeWarp() * Aug_factor)  # random time warping 16 times in parallel)
-    crop_augmenter = (Crop(size=L) * Aug_factor)  # random crop subsequences with length 16)
+    time_augmenter = (TimeWarp() * Aug_factor)  # random time warping 16 times in parallel)
+    #crop_augmenter = (Crop(size=L) * Aug_factor)  # random crop subsequences with length 16)
     #jittering_augmenter = (AddNoise(loc=0.0, scale=0.1, distr='gaussian', kind='additive') * Aug_factor)  # Loc: Mean of the random noise. scale: The standard deviaton of the random noise. We camn use Nornmnal
     #convolve_augmenter = (Convolve(window="flattop", size=16) * Aug_factor)  # Convolve time series with a kernel window OF 16.
     #rotation_augmenter = (Reverse() @ 0.8 * Aug_factor)  # with 50% probability, reverse the sequence
@@ -38,7 +38,7 @@ def seg_TSAUG(x, y, Aug_factor):
     #drift_augmenter = (Drift(max_drift=(0.1, 0.5)) @ 0.8 * Aug_factor)  # with 80% probability, random drift the signal up to 10% - 50%
     #pool_augmenter = (Pool(size=10) * Aug_factor)  # Reduce the temporal resolution without changing the length
 
-    x_aug, y_aug = crop_augmenter.augment(x, y)
+    x_aug, y_aug = time_augmenter.augment(x, y)
     
     #************************************************************************************************
     # Case 1: If the Augmation unit is factor then x and y should be the concatination of x_original and x_aug 
