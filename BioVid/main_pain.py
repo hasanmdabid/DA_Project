@@ -394,7 +394,7 @@ if __name__ == "__main__":
     # Deep learning
     param.update({"epochs": 100, "bs": 32, "lr": 0.0001, "smooth": 256, "resample": 256, "dense_out": 100, "minmax_norm": True})
     for clf in [mlp]:
-        for aug_method in ["RGW", "DGW"]:
+        for aug_method in ["crop", "jitter", "tw", "convolve", "rotation", "quantize", "drift", "TW", "RGW", "DGW"]:
             for aug_factor in [0.2, 0.4, 0.6, 0.8, 1, 2, 3, 4]:
                 try:
                     param["aug_factor"] = aug_factor

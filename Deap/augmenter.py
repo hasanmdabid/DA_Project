@@ -57,7 +57,7 @@ def augment(aug_factor, aug_method,x,y):
             print('mask is:', mask)
             x_aug = x_aug[:mask] # 3D
             y_aug = y_aug[:mask] # 3D
-        elif aug_factor > 1 :
+        elif aug_factor_type == int :
             factor = aug_factor
             aug = augmenter(aug_method, factor)
             x_aug, y_aug = aug.augment(x, y) # Both x and y are 3D

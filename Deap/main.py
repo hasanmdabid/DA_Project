@@ -49,8 +49,8 @@ print('Shape of combined_valence_labels:', combined_valence_slided.shape)
 print('Shape of combined_data_arousal_slided:', combined_data_arousal_slided.shape)
 print('Shape of combined_arousal_labels:', combined_arousal_slided.shape)
 
-param = {   "aug_method" : ["crop", "jitter", "convolve", "rotation", "quantize", "drift", "TW", "DGW", "RGW"],
-            "aug_factor" : [0.2, 0.4, 0.6, 0.8, 1, 2 ],
+param = {   "aug_method" : ["crop", "jitter", "time_warping", "convolve", "rotation", "quantize", "drift", "TW", "DGW", "RGW"],
+            "aug_factor" : [0.2, 0.4, 0.6, 0.8, 1, 2],
             "activation" : 'relu', 
             "init_mode" : 'glorot_uniform',
             "optimizer" : 'Adam',
@@ -93,12 +93,6 @@ def conduct_experiment(x_train, y_train, x_test, y_test, activation = param["act
     predictions = (model.predict(x_test) > 0.5).astype("int32")
     f1score_macro = (f1_score(y_test, predictions, average="macro"))
     accuracy = accuracy_score(y_test, predictions)
-    
-    # Update the model train and test accuracy 
-    print(confusion_matrix(y_test, predictions))
-    print('\n')
-    print(classification_report(y_test, predictions))
-    print('\n')
     #saveResultsCSV(aug_method, aug_factor, modelname, epochs, batch_size, best_train_accuracy, best_test_accuracy, best_f1_score, best_test_accuracy) # In save results we are providing the AUG factor
     #del x_train, y_train
     tf.keras.backend.clear_session()
@@ -124,10 +118,13 @@ for aug_method in param["aug_method"]:
             best_f1_score = 0
             best_train_accuracy = 0
             best_test_accuracy = 0
+            all_accuracies = []
+            all_f1_scores = []
             
             for train_index, test_index in tqdm(kf.split(x, y), total=n_splits, desc="K-Fold Cross-validation"):
                 x_train_raw, x_val = x[train_index], x[test_index]
                 y_train_raw, y_val = y[train_index], y[test_index]
+                print(f"Shape of x_train_raw {x_train_raw.shape}, y_train_raw{y_train_raw.shape}")
                 x_aug, y_aug = augment(aug_factor, aug_method, x_train_raw, y_train_raw)
                 print(f"Shape of x_aug train is {x_aug.shape}, y_aug train is {y_aug.shape}")
                 x_train = np.concatenate((x_train_raw, x_aug), axis=0)
@@ -137,6 +134,9 @@ for aug_method in param["aug_method"]:
                 train_acc,test_acc, accuracy, f1score_macro =conduct_experiment(x_train, y_train, x_test=x_val, y_test=y_val, activation = param["activation"], 
                                                                                 init_mode = param["init_mode"], optimizer = param["optimizer"], dropout_rate = param["dropout_rate"],
                                                                                  epochs = param["epochs"], verbose = param["verbose"], batch_size = param["batch_size"])
+                
+                all_accuracies.append(accuracy)
+                all_f1_scores.append(f1score_macro)
                 
                  # Update best train and test accuracy                
                 if train_acc > best_train_accuracy:
@@ -149,9 +149,18 @@ for aug_method in param["aug_method"]:
                     best_accuracy = accuracy
                 if f1score_macro > best_f1_score:
                     best_f1_score = f1score_macro
+            #Calculate the average accuracy and f1 score. 
+            average_accuracy = np.mean(all_accuracies)
+            average_f1_score = np.mean(all_f1_scores)
+            # Calculate standard deviation of average accuracy and average F1 score
+            std_accuracy = np.std(all_accuracies)
+            std_f1_score = np.std(all_f1_scores)
+                
             
-            saveResultsCSV(aug_method, aug_factor, modelname = param["modelname"] , epochs = param["epochs"], batch_size = param["batch_size"], train_acc = best_train_accuracy, 
-                           test_acc = best_test_accuracy, f1score_macro = best_f1_score, accuracy=best_accuracy) # In save results we are providing the AUG factor
+            saveResultsCSV(aug_method, aug_factor, modelname = param["modelname"] , epochs = param["epochs"], batch_size = param["batch_size"], 
+                           train_acc = best_train_accuracy, test_acc = best_test_accuracy, best_f1score_macro = best_f1_score, 
+                           avg_f1score = average_f1_score, std_f1score = std_f1_score,  best_accuracy=best_accuracy, avg_acc = average_accuracy, 
+                           std_acc = std_accuracy ) # In save results we are providing the AUG factor
             
         except Exception as e:
             print(e)
