@@ -43,7 +43,7 @@ def data_pre_pro_with_scalling():
         data.append(trial['data'])
     
     
-    path = './Deap/picture/'
+    path = '.picture/'
     if not os.path.exists(path):
         os.makedirs(path)
     

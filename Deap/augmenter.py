@@ -14,17 +14,17 @@ from DTW import *
 def augmenter(aug_method, factor):
     if aug_method == "time_warping":
         aug = (TimeWarp() * factor)  # random time warping 16 times in parallel)
-    elif aug_method == "crop":
+    elif aug_method == "crop" or aug_method =="slicing":
         aug = (Crop(size= 128) * factor)    # random crop subsequences with length 16)
     elif aug_method == "jitter":
         aug = (AddNoise(loc=0.0, scale=0.1, distr='gaussian', kind='additive') * factor)  # Loc: Mean of the random noise. scale: The standard deviaton of the random noise. We camn use Nornmnal
-    elif aug_method == "convolve":
+    elif aug_method == "convolve" or aug_method =="magnitude_warping":
         aug = (Convolve(window="flattop", size=16) *factor)  # Convolve time series with a kernel window OF 16.
     elif aug_method == "rotation":
         aug = (Reverse() @ 0.8 *factor)  # with 50% probability, reverse the sequence
     elif aug_method == "quantize":
         aug = (Quantize(n_levels=[10, 20, 30]) *factor)  # random quantize to 10-, 20-, or 30- level sets
-    elif aug_method == "drift":
+    elif aug_method == "drift" or aug_method =="scaling":
         aug = (Drift(max_drift=(0.1, 0.5)) @ 0.8 *factor)  # with 80% probability, random drift the signal up to 10% - 50%
     elif aug_method == "pool":
         aug = (Pool(size=10) *factor)  # Reduce the temporal resolution without changing the length       
@@ -81,8 +81,8 @@ def augment(aug_factor, aug_method,x,y):
                
         if ((aug_factor >0) and (aug_factor<1)):
             mask = int(aug_factor * x.shape[0])
-            x_frac = x_aug[:mask]
-            y_frac = y_aug[:mask]
+            x_frac = x[:mask]
+            y_frac = y[:mask]
             x_aug, y_aug = globals()[aug_method](x_frac, y_frac) # x_aug is 3D and y_aug is  1D
         
         elif aug_factor_type == int:
@@ -91,15 +91,15 @@ def augment(aug_factor, aug_method,x,y):
             for i in range(aug_factor):
                 x_aug_den, y_aug_den = globals()[aug_method](x, y)
                 x_aug.append(x_aug_den)
-                y_aug.append(y_aug_den)
-            x_aug, y_aug = np.array(x_aug), np.array(y_aug)
+                y_aug.append(y_aug_den)             
+            x_aug, y_aug = np.vstack(x_aug), np.vstack(y_aug)
+            y_aug = y_aug.flatten()
+            #x_aug, y_aug = np.array(x_aug), np.array(y_aug)
         
         else:
             print("The augmentation factor must be greater greater than 0")
-        return x_aug, y_aug
-        
-        
-        
+        return x_aug, y_aug     
+     
         
 if __name__ == "__main__":
     print(__name__)
@@ -107,3 +107,4 @@ if __name__ == "__main__":
         x_aug, labels_to_save = augment(aug_factor, aug_method, x,y)
     except: 
         print("Some thing is wrong with the Augmente, Probably the augmentation factor, x, y and the aug_method is not declared.")
+

@@ -10,11 +10,11 @@ from sklearn.model_selection import train_test_split
 
 import tensorflow as tf
 from data_preprocessing import *
-from data_preprocessing_withscalling import *
+from Deap.unnecessary.data_preprocessing_withscalling import *
 from models import *
 from save_result import *
 from sklearn.utils import resample
-import seg_TSAUG
+import Deap.unnecessary.seg_TSAUG as seg_TSAUG
 
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix

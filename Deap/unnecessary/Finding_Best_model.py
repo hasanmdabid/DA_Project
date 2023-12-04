@@ -12,9 +12,9 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from keras.callbacks import EarlyStopping
 from data_preprocessing import *
-from data_preprocessing_withscalling import *
+from Deap.unnecessary.data_preprocessing_withscalling import *
 from models import *
-import seg_TSAUG
+import Deap.unnecessary.seg_TSAUG as seg_TSAUG
 #from vis.backprop_modifiers import get
 
 
