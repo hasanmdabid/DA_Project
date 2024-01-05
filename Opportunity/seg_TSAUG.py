@@ -8,7 +8,7 @@ import load_data
 import numpy as np
 import pandas as pd
 from tsaug import TimeWarp, Crop, Quantize, Drift, Reverse, Convolve, Pool, AddNoise
-from tensorflow.keras.utils import to_categorical
+from keras.utils import to_categorical
 import math
 
 

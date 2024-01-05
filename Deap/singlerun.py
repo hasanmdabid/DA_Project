@@ -56,7 +56,7 @@ best_train_accuracy = 0
 best_test_accuracy = 0
 all_accuracies = []
 all_f1_scores = []
-n_splits = 5  # You can adjust this number
+n_splits = 3  # You can adjust this number
 
 # Initialize K-fold cross-validator
 kf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)

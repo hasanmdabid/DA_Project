@@ -23,3 +23,11 @@ def RGW(data, labels):
 def TW(data, labels):
     guided_TW_1 = aug.time_warp(data)
     return guided_TW_1, labels
+
+def permutation(data, labels):
+    data_aug = aug.permutation(data)
+    return data_aug, labels
+
+def spawner(data, labels):
+    data_aug = aug.spawner(data, labels)
+    return data_aug, labels

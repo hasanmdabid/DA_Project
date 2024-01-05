@@ -44,14 +44,14 @@ print('Shape of combined_data_arousal_slided:', combined_data_arousal_slided.sha
 print('Shape of combined_arousal_labels:', combined_arousal_slided.shape)
 # ["crop", "jitter", "time_warping", "convolve", "rotation", "quantize", "drift", "pool", "TW", "RGW", "DGW"]
 
-param = {   "aug_method" : ["crop", "jitter", "time_warping", "convolve", "rotation", "quantize", "drift", "pool", "TW", "RGW", "DGW"],
+param = {   "aug_method" : ["crop", "jitter", "time_warping", "convolve", "rotation", "drift", "quantize", "TW", "RGW", "DGW" "permutation", "spawner"],
             "aug_factor" : [0.2, 0.4, 0.6, 0.8, 1, 2],
             "activation" : 'relu', 
             "init_mode" : 'glorot_uniform',
             "optimizer" : 'Adam',
             "dropout_rate" : 0.4,
             "batch_size" : 32,
-            "epochs" : 200,
+            "epochs" : 100,
             "verbose" : 2,
             "modelname" : 'CONV2D'          
          }
@@ -64,6 +64,12 @@ if label_name == "valance":
 elif label_name == "arousal":
     x = combined_data_arousal_slided
     y = combined_arousal_slided
+
+max_val_sacled = np.max(x)
+min_val_scaled = np.min(x)
+print('Maximume_value Before rescaled:', max_val_sacled)
+print('Minimume_value Before rescaled:', min_val_scaled)
+
 
 #x_train_raw, x_test, y_train_raw, y_test = train_test_split(x, y, test_size=0.25, random_state=100, stratify=valence_slided)
 #print(f"Shape of x_train_raw {x_train_raw.shape} and y_trai_raw {y_train_raw.shape}")
@@ -106,7 +112,7 @@ for aug_method in param["aug_method"]:
         try:
             print(f"Augmentation method is {aug_method} and augmentation factor is {aug_factor}")
             # Define the number of folds
-            n_splits = 5  # You can adjust this number
+            n_splits = 3  # You can adjust this number
 
             # Initialize K-fold cross-validator
             kf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)

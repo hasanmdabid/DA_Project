@@ -9,6 +9,7 @@ import numpy as np
 from tsaug import TimeWarp, Crop, Quantize, Drift, Reverse, Convolve, Pool, AddNoise
 import numpy as np
 from DTW import *
+import synthetic_data_generator
 
 # -----------------Creating the augmenter class---------------------------------------------------
 def augmenter(aug_method, factor):
@@ -77,7 +78,7 @@ def augment(aug_factor, aug_method,x,y):
         #return x_aug, y_aug
         return x_aug, labels_to_save 
     
-    elif aug_method == "TW" or aug_method == "RGW" or aug_method == "DGW":
+    elif aug_method == "TW" or aug_method == "RGW" or aug_method == "DGW" or aug_method == "spawner" or aug_method == "permutation":
                
         if ((aug_factor >0) and (aug_factor<1)):
             mask = int(aug_factor * x.shape[0])
@@ -95,10 +96,15 @@ def augment(aug_factor, aug_method,x,y):
             x_aug, y_aug = np.vstack(x_aug), np.vstack(y_aug)
             y_aug = y_aug.flatten()
             #x_aug, y_aug = np.array(x_aug), np.array(y_aug)
-        
-        else:
+    
+    elif aug_method == 'cGAN':
+            # Generate the  synthetic data from the Generator
+            X_synthetic, Y_synthetic = synthetic_data_generator.GAN_generator()    
+            x_aug = np.concatenate((x_aug, X_synthetic), axis=0)
+            y_aug = np.concatenate((y_aug, Y_synthetic), axis= 0)
+    else:
             print("The augmentation factor must be greater greater than 0")
-        return x_aug, y_aug     
+    return x_aug, y_aug     
      
         
 if __name__ == "__main__":

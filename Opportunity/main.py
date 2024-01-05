@@ -3,13 +3,13 @@
 # data augmentation.
 #    ### 1. Preprocessing the dataset
 #    ### 2. segmentation of the dataset
-# ## 2nd step will be to use existing augmentation method to generate fabricated data and see the performance.
+# ## 2nd step will be to use existing augmentation method to generate synthetic data and see the performance.
 # ## 3rd step will be to formulate a unique evaluation matrix for the Augmentation methods (GANS)
 import gc
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras.utils import to_categorical
+from keras.utils import to_categorical
 from sklearn.metrics import f1_score
 import train_test_split
 import nn_models
