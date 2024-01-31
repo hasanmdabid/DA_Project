@@ -26,3 +26,8 @@ def permutation(data, labels):
 def spawner(data, labels):
     data_aug = aug.spawner(data, labels)
     return data_aug, labels
+
+
+def WW(data, labels):
+    guided_TW_1 = aug.window_warp(data, window_ratio=0.1, scales=[0.5, 2.])
+    return guided_TW_1, labels

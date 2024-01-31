@@ -1,7 +1,6 @@
 import gc
 import numpy as np
 from sklearn.metrics import accuracy_score, f1_score
-
 from keras.callbacks import EarlyStopping
 import platform
 import tensorflow as tf
@@ -10,7 +9,6 @@ from models import *
 from save_result import *
 from augmenter import*
 from DTW import *
-
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
@@ -18,6 +16,15 @@ from tqdm import tqdm
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 import tensorflow as tf
+
+
+
+import tensorflow as tf
+if tf.test.gpu_device_name():
+    print('Default GPU Device: {}'.format(tf.test.gpu_device_name()))
+else:
+    print("Please install GPU version of TF")
+
 
 def check_gpu():
 
@@ -34,17 +41,17 @@ check_gpu()
 # -------------------------------------------Importing the preprocessed data----------------
 eeg_valence_slided, valence_slided, eeg_arousal_slided, arousal_slided, combined_data_valence_slided, combined_valence_slided, combined_data_arousal_slided, combined_arousal_slided = data_pre_pro_with_scalling()
 
-print('Shape of eeg_valence_data:', eeg_valence_slided.shape)
-print('Shape of valence_labels:', valence_slided.shape)
-print('Shape o eeg_arousal_data:', eeg_arousal_slided.shape)
-print('Shape of arousal_labels:', arousal_slided.shape)
-print('Shape of combined_data_valence_slided:', combined_data_valence_slided.shape)
-print('Shape of combined_valence_labels:', combined_valence_slided.shape)
-print('Shape of combined_data_arousal_slided:', combined_data_arousal_slided.shape)
-print('Shape of combined_arousal_labels:', combined_arousal_slided.shape)
-# ["crop", "jitter", "time_warping", "convolve", "rotation", "quantize", "drift", "pool", "TW", "RGW", "DGW"]
-
-param = {   "aug_method" : ["crop", "jitter", "time_warping", "convolve", "rotation", "drift", "quantize", "TW", "RGW", "DGW" "permutation", "spawner"],
+print('Shape of eeg_valence_data:', eeg_valence_slided.shape)                        #(80640, 128, 32)
+print('Shape of valence_labels:', valence_slided.shape)                              #(80640,)
+print('Shape o eeg_arousal_data:', eeg_arousal_slided.shape)                         #(80640, 128, 32)
+print('Shape of arousal_labels:', arousal_slided.shape)                              #(80640,) 
+print('Shape of combined_data_valence_slided:', combined_data_valence_slided.shape)  #(80640, 128, 40)
+print('Shape of combined_valence_labels:', combined_valence_slided.shape)            #(80640,)
+print('Shape of combined_data_arousal_slided:', combined_data_arousal_slided.shape)  #(80640, 128, 40)
+print('Shape of combined_arousal_labels:', combined_arousal_slided.shape)            #(80640,)
+# ["crop", "jitter", "time_warping", "convolve", "rotation", "drift", "quantize", "TW", "RGW", "DGW" "permutation", "spawner"]
+ 
+param = {   "aug_method" : ['WW'],
             "aug_factor" : [0.2, 0.4, 0.6, 0.8, 1, 2],
             "activation" : 'relu', 
             "init_mode" : 'glorot_uniform',
@@ -67,8 +74,8 @@ elif label_name == "arousal":
 
 max_val_sacled = np.max(x)
 min_val_scaled = np.min(x)
-print('Maximume_value Before rescaled:', max_val_sacled)
-print('Minimume_value Before rescaled:', min_val_scaled)
+print('Maximume_value of Raw DATA:', max_val_sacled)
+print('Minimume_value of Raw DATA:', min_val_scaled)
 
 
 #x_train_raw, x_test, y_train_raw, y_test = train_test_split(x, y, test_size=0.25, random_state=100, stratify=valence_slided)
@@ -129,7 +136,10 @@ for aug_method in param["aug_method"]:
                 x_train_raw, x_val = x[train_index], x[test_index]
                 y_train_raw, y_val = y[train_index], y[test_index]
                 print(f"Shape of x_train_raw {x_train_raw.shape}, y_train_raw {y_train_raw.shape}")
-                x_aug, y_aug = augment(aug_factor, aug_method, x_train_raw, y_train_raw)
+                
+                # Augment the data
+                x_aug, y_aug = augment(aug_factor, aug_method, label_name, x_train_raw, y_train_raw)
+                
                 print(f"Shape of x_aug train is {x_aug.shape}, y_aug train is {y_aug.shape}")
                 x_train = np.concatenate((x_train_raw, x_aug), axis=0)
                 y_train = np.concatenate((y_train_raw, y_aug), axis=0)

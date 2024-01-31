@@ -206,7 +206,7 @@ def data_pre_pro_with_scalling():
             peripheral_data.append(data[i, j])
     peripheral_data = np.reshape(peripheral_data, (len(
         data), len(peripheral_channels), len(data[0, 0])))
-    #print('Shappe of Peripheral data', peripheral_data.shape)
+    #print('Shape of Peripheral data', peripheral_data.shape)
 
     # Converting the data into (Samples, row, column) form.
 

@@ -31,3 +31,7 @@ def permutation(data, labels):
 def spawner(data, labels):
     data_aug = aug.spawner(data, labels)
     return data_aug, labels
+
+def WW(data, label):
+    data_aug = aug.window_warp(data)
+    return data_aug, label

@@ -8,7 +8,6 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import platform
 import numpy as np
-import pandas as pd
 import tensorflow as tf
 from pathlib import Path
 from scipy.stats import zscore
@@ -132,10 +131,7 @@ def prepare_data(X, y, subjects, param):
         for label, count in zip(unique_labels, counts):
             print(f"Subject {label}: {count} occurrences")
         """
-        
 
-  
-        # TODO: clean augmentation process
 
         if param["aug_method"] == "crop" or param["aug_method"] == "tw" or param["aug_method"] == "jitter" or  param["aug_method"] == "convolve" or param["aug_method"] == "rotation" or param["aug_method"] == "quantize" or param["aug_method"] == "drift":
 
@@ -198,7 +194,7 @@ def prepare_data(X, y, subjects, param):
             y_aug = to_categorical(y_aug[:, 0, 0]) #2D (After performing One hot encode)
             
 
-        elif param["aug_method"] == "DGW" or param["aug_method"] == "RGW" or param["aug_method"] == "TW" or param["aug_method"] == "spawner" or param["aug_method"] == "permutation":
+        elif param["aug_method"] == "DGW" or param["aug_method"] == "RGW" or param["aug_method"] == "TW" or param["aug_method"] == "WW" or param["aug_method"] == "spawner" or param["aug_method"] == "permutation":
 
         # Calculate the number of samples to select (20% of the total samples)
             if param["aug_factor"] <1:
@@ -209,6 +205,8 @@ def prepare_data(X, y, subjects, param):
                 #subjects = np.vstack([subjects, subjects_aug])
                 if param["aug_method"] == "TW":
                     x_aug, y_aug = TW(x_frac_aug, y_frac_aug) # shape of x_frac_aug, y_frac_aug is (3D, 1D) and X_aug,y_aug is (3D, 1d).
+                elif param["aug_method"] == "WW":
+                    x_aug, y_aug = WW(x_frac_aug, y_frac_aug) # shape of x_frac_aug, y_frac_aug is (3D, 1D) and X_aug,y_aug is (3D, 1d).
                 elif param["aug_method"] == "RGW":
                     x_aug, y_aug =  RGW(x_frac_aug, y_frac_aug) # shape of x_frac_aug, y_frac_aug is (3D, 1D) and X_aug,y_aug is (3D, 1d).
                 elif param["aug_method"] == "DGW":
@@ -224,6 +222,8 @@ def prepare_data(X, y, subjects, param):
             elif param["aug_factor"] == 1:
                 if param["aug_method"] == "TW":
                     x_aug, y_aug = TW(x_minor, y_minor) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                elif param["aug_method"] == "WW":
+                    x_aug, y_aug = WW(x_minor, y_minor) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
                 elif param["aug_method"] == "RGW":
                     x_aug, y_aug =  RGW(x_minor, y_minor) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
                 elif param["aug_method"] == "DGW":
@@ -239,6 +239,9 @@ def prepare_data(X, y, subjects, param):
                 if param["aug_method"] == "TW":
                     x_aug_1, y_aug_1 = TW(x_minor, y_minor)
                     x_aug_2, y_aug_2 = TW(x_minor, y_minor)
+                elif param["aug_method"] == "WW":
+                    x_aug_1, y_aug_1 = WW(x_minor, y_minor)
+                    x_aug_2, y_aug_2 = WW(x_minor, y_minor)
                 elif param["aug_method"] == "RGW":
                     x_aug_1, y_aug_1 = RGW(x_minor, y_minor)
                     x_aug_2, y_aug_2 = RGW(x_minor, y_minor)
@@ -262,6 +265,10 @@ def prepare_data(X, y, subjects, param):
                     x_aug_1, y_aug_1 = TW(x_minor, y_minor)
                     x_aug_2, y_aug_2 = TW(x_minor, y_minor)
                     x_aug_3, y_aug_3 = TW(x_minor, y_minor)
+                elif param["aug_method"] == "WW":
+                    x_aug_1, y_aug_1 = WW(x_minor, y_minor)
+                    x_aug_2, y_aug_2 = WW(x_minor, y_minor)
+                    x_aug_3, y_aug_3 = WW(x_minor, y_minor)
                 elif param["aug_method"] == "RGW":
                     x_aug_1, y_aug_1 = RGW(x_minor, y_minor)
                     x_aug_2, y_aug_2 = RGW(x_minor, y_minor)
@@ -290,6 +297,11 @@ def prepare_data(X, y, subjects, param):
                     x_aug_2, y_aug_2 = TW(x_minor, y_minor)
                     x_aug_3, y_aug_3 = TW(x_minor, y_minor)
                     x_aug_4, y_aug_4 = TW(x_minor, y_minor)
+                elif param["aug_method"] == "WW":
+                    x_aug_1, y_aug_1 = WW(x_minor, y_minor)
+                    x_aug_2, y_aug_2 = WW(x_minor, y_minor)
+                    x_aug_3, y_aug_3 = WW(x_minor, y_minor)
+                    x_aug_4, y_aug_4 = WW(x_minor, y_minor)
                 elif param["aug_method"] == "RGW":
                     x_aug_1, y_aug_1 = RGW(x_minor, y_minor)
                     x_aug_2, y_aug_2 = RGW(x_minor, y_minor)
@@ -318,6 +330,16 @@ def prepare_data(X, y, subjects, param):
             print(x_aug.shape, y_aug.shape)         
             x_aug = np.expand_dims(x_aug, axis= -1) #4D
             y_aug = to_categorical(y_aug)           #2D (After performing One hot encode)
+            
+        elif param["aug_method"] == "GAN":
+            mask = int(param["aug_factor"] * x_minor.shape[0])
+            subjects_aug = subjects[:mask]
+            x_aug = np.load(f'/home/abidhasan/Documents/DA_Project/BioVid/datasets/cGAN_Generated_data/painmonit/{aug_factor}_X.npy')
+            y_aug = np.load(f'/home/abidhasan/Documents/DA_Project/BioVid/datasets/cGAN_Generated_data/painmonit/{aug_factor}_y.npy')
+            print(x_aug.shape, y_aug.shape)         
+            x_aug = np.expand_dims(x_aug, axis= -1) #4D
+            y_aug = to_categorical(y_aug)           #2D (After performing One hot encode)
+        
 
 
         print("Minor Data Shape after augmenation:")
@@ -429,12 +451,12 @@ if __name__ == "__main__":
     print(subjects.shape)
     print("\n")
     
-    # "crop", "jitter", "tw", "convolve", "rotation", "quantize", "drift", "TW", "RGW", "DGW"
+    # "crop", "jitter", "tw", "convolve", "rotation", "quantize", "drift", "TW", "WW" "RGW", "DGW", "spawner", "permutation", GAN
 
     # Deep learning
     param.update({"epochs": 100, "bs": 32, "lr": 0.0001, "smooth": 256, "resample": 256, "dense_out": 100, "minmax_norm": True})
     for clf in [mlp]:
-        for aug_method in ["crop", "jitter", "tw", "convolve", "rotation", "quantize", "drift", "TW", "RGW", "DGW", "spawner", "permutation"]:
+        for aug_method in ["WW"]:
             for aug_factor in [.2, .4, .6, .8, 1, 2, 3, 4]:
                 try:
                     param["aug_factor"] = aug_factor

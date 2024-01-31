@@ -165,7 +165,7 @@ def prepare_data(X, y, subjects, param):
             x_aug = np.expand_dims(x_aug, axis= -1) #4D
             y_aug = to_categorical(y_aug[:, 0, 0]) #2D (After performing One hot encode)
         
-        elif param["aug_method"] == "DGW" or param["aug_method"] == "RGW" or param["aug_method"] == "TW"or param["aug_method"] == "spawner" or param["aug_method"] == "permutation":
+        elif param["aug_method"] == "DGW" or param["aug_method"] == "RGW" or param["aug_method"] == "TW" or param["aug_method"] == "WW" or param["aug_method"] == "spawner" or param["aug_method"] == "permutation" or param["aug_method"] == "GAN":
 
         # Calculate the number of samples to select (20% of the total samples)
             if param["aug_factor"] == 2:
@@ -198,6 +198,13 @@ def prepare_data(X, y, subjects, param):
                     x_aug, y_aug = np.concatenate([x_aug_1, x_aug_2], axis= 0), np.concatenate([y_aug_1, y_aug_2], axis= 0)
                 else:
                     x_aug, y_aug =  TW(x_frac_aug, y_frac_aug) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+            elif param['aug_method'] == 'WW':
+                if param["aug_factor"] == 2:
+                    x_aug_1, y_aug_1 = WW(X_for_aug, y_for_aug) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                    x_aug_2, y_aug_2 = WW(X_for_aug, y_for_aug) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                    x_aug, y_aug = np.concatenate([x_aug_1, x_aug_2], axis= 0), np.concatenate([y_aug_1, y_aug_2], axis= 0)
+                else:
+                    x_aug, y_aug =  WW(x_frac_aug, y_frac_aug) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
             elif param['aug_method'] == 'spawner':
                 if param["aug_factor"] == 2:
                     x_aug_1, y_aug_1 = spawner(X_for_aug, y_for_aug) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
@@ -212,6 +219,10 @@ def prepare_data(X, y, subjects, param):
                     x_aug, y_aug = np.concatenate([x_aug_1, x_aug_2], axis= 0), np.concatenate([y_aug_1, y_aug_2], axis= 0)
                 else:
                     x_aug, y_aug = permutation(x_frac_aug, y_frac_aug) # shape ofx_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+            
+            elif param['aug_method'] == 'GAN':
+                x_aug = np.load(f'/home/abidhasan/Documents/DA_Project/BioVid/datasets/cGAN_Generated_data/biovid/{aug_factor}_X.npy')
+                y_aug = np.load(f'/home/abidhasan/Documents/DA_Project/BioVid/datasets/cGAN_Generated_data/biovid/{aug_factor}_y.npy')
             
             x_aug = np.expand_dims(x_aug, axis= -1) #4D
             y_aug = to_categorical(y_aug)           #2D (After performing One hot encode)
@@ -333,8 +344,8 @@ if __name__ == "__main__":
     
     # ["crop", "jitter", "convolve", "rotation", "quantize", "drift", "TW", "DGW", "RGW", "spawner", "permutation"]
     for clf in [mlp]:
-         for aug_method in ["crop", "jitter", "convolve", "rotation", "quantize", "drift", "TW", "DGW", "RGW", "spawner", "permutation"]:
-            for aug_factor in [0.2, 0.4, 0.6, 0.8, 1, 2]:
+         for aug_method in ["WW"]:
+            for aug_factor in [1, 2]:
                 
                 try:
                     param["aug_factor"] = aug_factor
