@@ -80,7 +80,6 @@ def _cummulative_matrix(cost, slope_constraint, window):
     p = cost.shape[0]
     s = cost.shape[1]
     
-    # Note: DTW is one larger than cost and the original patterns
     DTW = np.full((p+1, s+1), np.inf)
 
     DTW[0, 0] = 0.0
@@ -101,14 +100,7 @@ def _cummulative_matrix(cost, slope_constraint, window):
     return DTW
 
 def shape_dtw(prototype, sample, return_flag = RETURN_VALUE, slope_constraint="asymmetric", window=None, descr_ratio=0.05):
-    """ Computes the shapeDTW of two sequences.
-    :param prototype: np array [0..b]
-    :param sample: np array [0..t]
-    :param extended: bool
-    """
-    # shapeDTW
-    # https://www.sciencedirect.com/science/article/pii/S0031320317303710
-    
+
     p = prototype.shape[0]
     assert p != 0, "Prototype empty!"
     s = sample.shape[0]

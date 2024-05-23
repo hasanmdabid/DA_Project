@@ -1,12 +1,17 @@
+"""
+We want to acknowledge the contribution of Iwana and Uchida's on the scientific paper titled as "An empirical survey of data augmentation for
+time series classification with neural networks. We modifid the code for the moltimodal time series classification. 
+"""
+
 import numpy as np
 from tqdm import tqdm
 
 def jitter(x, sigma=0.03):
-    # https://arxiv.org/pdf/1706.00527.pdf
+    
     return x + np.random.normal(loc=0., scale=sigma, size=x.shape)
 
 def scaling(x, sigma=0.1):
-    # https://arxiv.org/pdf/1706.00527.pdf
+    
     factor = np.random.normal(loc=1., scale=sigma, size=(x.shape[0],x.shape[2]))
     return np.multiply(x, factor[:,np.newaxis,:])
 
@@ -65,7 +70,7 @@ def time_warp(x, sigma=0.2, knot=4):
     return ret
 
 def window_slice(x, reduce_ratio=0.9):
-    # https://halshs.archives-ouvertes.fr/halshs-01357973/document
+    
     target_len = np.ceil(reduce_ratio*x.shape[1]).astype(int)
     if target_len >= x.shape[1]:
         return x
@@ -79,7 +84,7 @@ def window_slice(x, reduce_ratio=0.9):
     return ret
 
 def window_warp(x, window_ratio=0.1, scales=[0.5, 2.]):
-    # https://halshs.archives-ouvertes.fr/halshs-01357973/document
+    
     warp_scales = np.random.choice(scales, x.shape[0])
     warp_size = np.ceil(window_ratio*x.shape[1]).astype(int)
     window_steps = np.arange(warp_size)
@@ -98,9 +103,7 @@ def window_warp(x, window_ratio=0.1, scales=[0.5, 2.]):
     return ret
 
 def spawner(x, labels, slope_constraint="symmetric", sigma=0.05, verbose=0):
-    # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6983028/
-    # use verbose=-1 to turn off warnings
-    # use verbose=1 to print out figures
+
     
     import utils.dtw as dtw
     random_points = np.random.randint(low=1, high=x.shape[1]-1, size=x.shape[0])
@@ -135,10 +138,6 @@ def spawner(x, labels, slope_constraint="symmetric", sigma=0.05, verbose=0):
     return jitter(ret, sigma=sigma)
 
 def wdba(x, labels, batch_size=6, slope_constraint="symmetric", use_window=True, verbose=0):
-    # https://ieeexplore.ieee.org/document/8215569
-    # use verbose = -1 to turn off warnings    
-    # slope_constraint is for DTW. "symmetric" or "asymmetric"
-    
     import utils.dtw as dtw
     
     if use_window:
@@ -196,10 +195,6 @@ def wdba(x, labels, batch_size=6, slope_constraint="symmetric", use_window=True,
 # Proposed
 
 def random_guided_warp(x, labels, slope_constraint="symmetric", use_window=True, dtw_type="normal", verbose=0):
-    # use verbose = -1 to turn off warnings
-    # slope_constraint is for DTW. "symmetric" or "asymmetric"
-    # dtw_type is for shapeDTW or DTW. "normal" or "shape"
-    
     import utils.dtw as dtw
     
     if use_window:
@@ -238,10 +233,6 @@ def random_guided_warp_shape(x, labels, slope_constraint="symmetric", use_window
     return random_guided_warp(x, labels, slope_constraint, use_window, dtw_type="shape")
 
 def discriminative_guided_warp(x, labels, batch_size=6, slope_constraint="symmetric", use_window=True, dtw_type="normal", use_variable_slice=True, verbose=0):
-    # use verbose = -1 to turn off warnings
-    # slope_constraint is for DTW. "symmetric" or "asymmetric"
-    # dtw_type is for shapeDTW or DTW. "normal" or "shape"
-    
     import utils.dtw as dtw
     
     if use_window:

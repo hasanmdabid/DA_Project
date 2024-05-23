@@ -1,7 +1,5 @@
 import utils.augmentation as aug
 import numpy as np
-import numpy as np
-import utils.augmentation as aug
 
 # All the Augmentation Function Here take input Data (Nr Samples, row, column- 3D) 
 # and Labels (Nr of Sagments, 1D) 
@@ -16,8 +14,8 @@ def RGW(data, labels):
     return guided_RTW_1, labels
 
 def TW(data, labels):
-    guided_TW_1 = aug.time_warp(data)
-    return guided_TW_1, labels
+    data_aug = aug.time_warp(data)
+    return data_aug, labels
 
 def permutation(data, labels):
     data_aug = aug.permutation(data)
@@ -29,5 +27,5 @@ def spawner(data, labels):
 
 
 def WW(data, labels):
-    guided_TW_1 = aug.window_warp(data, window_ratio=0.1, scales=[0.5, 2.])
-    return guided_TW_1, labels
+    data_aug = aug.window_warp(data, window_ratio=0.1, scales=[0.5, 2.])
+    return data_aug, labels

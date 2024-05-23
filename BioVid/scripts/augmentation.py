@@ -1,13 +1,7 @@
-'''
-This script implements possible data augmentation techniques.
-
-Methods copied from:
-B. K. Iwana and S. Uchida, “An empirical survey of data augmentation for time series classification with
-neural networks,” Plos one, vol. 16, no. 7, p. e0254841, 2021.
-
-Or more specifically from:
-https://github.com/uchidalab/time_series_augmentation
-'''
+"""
+We want to acknowledge the contribution of Iwana and Uchida's on the scientific paper titled as "An empirical survey of data augmentation for
+time series classification with neural networks. We modifid the code for the moltimodal time series classification. 
+"""
 
 import os
 import sys
@@ -120,14 +114,7 @@ def dtw(prototype, sample, return_flag = RETURN_VALUE, slope_constraint="asymmet
         return DTW[-1,-1]
 
 def shape_dtw(prototype, sample, return_flag = RETURN_VALUE, slope_constraint="asymmetric", window=None, descr_ratio=0.05):
-    """ Computes the shapeDTW of two sequences.
-    :param prototype: np array [0..b]
-    :param sample: np array [0..t]
-    :param extended: bool
-    """
-    # shapeDTW
-    # https://www.sciencedirect.com/science/article/pii/S0031320317303710
-    
+
     p = prototype.shape[0]
     assert p != 0, "Prototype empty!"
     s = sample.shape[0]
@@ -169,11 +156,11 @@ def shape_dtw(prototype, sample, return_flag = RETURN_VALUE, slope_constraint="a
 #-------------------------------------------------------------------------------------------------------
 
 def jitter(x, labels= None, sigma=0.03):
-    # https://arxiv.org/pdf/1706.00527.pdf
+    
     return x + np.random.normal(loc=0., scale=sigma, size=x.shape)
 
 def scaling(x, labels= None, sigma=0.1):
-    # https://arxiv.org/pdf/1706.00527.pdf
+    
     factor = np.random.normal(loc=1., scale=sigma, size=(x.shape[0],x.shape[2]))
     return np.multiply(x, factor[:,np.newaxis,:])
 
@@ -253,7 +240,7 @@ def time_warp(x, labels= None, sigma=0.2, knot=4):
     return ret
 
 def window_slice(x, labels=None, reduce_ratio=0.9):
-    # https://halshs.archives-ouvertes.fr/halshs-01357973/document
+    
     target_len = np.ceil(reduce_ratio*x.shape[1]).astype(int)
     if target_len >= x.shape[1]:
         return x
@@ -267,7 +254,7 @@ def window_slice(x, labels=None, reduce_ratio=0.9):
     return ret
 
 def window_warp(x, labels= None, window_ratio=0.1, scales=[0.5, 2.]):
-    # https://halshs.archives-ouvertes.fr/halshs-01357973/document
+    
 
     #if isinstance(y, (np.ndarray, np.generic) )
     warp_scales = np.random.choice(scales, x.shape[0])
@@ -288,9 +275,7 @@ def window_warp(x, labels= None, window_ratio=0.1, scales=[0.5, 2.]):
     return ret
 
 def spawner(x, labels, sigma=0.05, verbose=-1):
-    # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6983028/
-    # use verbose=-1 to turn off warnings
-    # use verbose=1 to print out figures
+
 
     random_points = np.random.randint(low=1, high=x.shape[1]-1, size=x.shape[0])
     window = np.ceil(x.shape[1] / 10.).astype(int)
@@ -321,9 +306,7 @@ def spawner(x, labels, sigma=0.05, verbose=-1):
     return jitter(ret, labels=labels, sigma=sigma)
 
 def wdba(x, labels, batch_size=6, slope_constraint="symmetric", use_window=True, verbose=-1):
-    # https://ieeexplore.ieee.org/document/8215569
-    # use verbose = -1 to turn off warnings
-    # slope_constraint is for  "symmetric" or "asymmetric"
+
 
     if use_window:
         window = np.ceil(x.shape[1] / 10.).astype(int)
@@ -379,9 +362,7 @@ def wdba(x, labels, batch_size=6, slope_constraint="symmetric", use_window=True,
 
 # Proposed
 def random_guided_warp(x, labels, slope_constraint="symmetric", use_window=True, dtw_type="normal", verbose=-1):
-    # use verbose = -1 to turn off warnings
-    # slope_constraint is for  "symmetric" or "asymmetric"
-    # dtw_type is for shapeDTW or  "normal" or "shape"
+
 
     if use_window:
         window = np.ceil(x.shape[1] / 10.).astype(int)
@@ -419,9 +400,7 @@ def random_guided_warp_shape(x, labels, slope_constraint="symmetric", use_window
     return random_guided_warp(x, labels, slope_constraint, use_window, dtw_type="shape")
 
 def discriminative_guided_warp(x, labels, batch_size=6, slope_constraint="symmetric", use_window=True, dtw_type="normal", use_variable_slice=True, verbose=-1):
-    # use verbose = -1 to turn off warnings
-    # slope_constraint is for  "symmetric" or "asymmetric"
-    # dtw_type is for shapeDTW or  "normal" or "shape"
+
 
     if use_window:
         window = np.ceil(x.shape[1] / 10.).astype(int)

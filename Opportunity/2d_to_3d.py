@@ -11,7 +11,7 @@ def get_strides(a, L, ov):
 
     return np.array(out)
 
-# I want a 3d array with fixed window size=5 and the formation is processed by slided 'window algorithm' with stride of 3
+# I want a 3d array with fixed window size=5 and the formation is processed by "slided window algorithm" with stride of 3
 
 print('After Overlapping')
 new_array = get_strides(x, 5, 3)
