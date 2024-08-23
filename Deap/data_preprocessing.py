@@ -1,3 +1,5 @@
+# pylint: disable-all
+
 def data_pre_pro_with_scalling():
     import pickle
     import pandas as pd

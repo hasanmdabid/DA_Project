@@ -1,3 +1,4 @@
+# pylint: disable-all
 from enum import unique
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -111,7 +112,7 @@ def prepare_data(X, y, subjects, param):
             print(f"Label {label}: {count} occurrences")
         
         # TODO: clean augmentation process
-        if param["aug_method"] == "crop" or param["aug_method"] == "jitter" or  param["aug_method"] == "convolve" or param["aug_method"] == "rotation" or param["aug_method"] == "quantize" or param["aug_method"] == "drift":
+        if param["aug_method"] == "slicing" or param["aug_method"] == "jitter" or  param["aug_method"] == "MW" or param["aug_method"] == "rotation" or param["aug_method"] == "quantize" or param["aug_method"] == "drift":
             
             # To use "TSAUG" python DA library the inPut format ox and y is 3D (Nr. of samples, Timesstamp, channels)
             # # extend Dimension axis
@@ -129,7 +130,7 @@ def prepare_data(X, y, subjects, param):
                     augmenter = (Crop(size= 1408) * 1 )
                 elif param["aug_method"] == "jitter":
                     augmenter = (AddNoise(loc=0.0, scale=0.2, distr='gaussian', kind='additive') * 1)
-                elif param["aug_method"] == "convolve" or param["aug_method"] == "magnitude_warping":
+                elif param["aug_method"] == "convolve" or param["aug_method"] == "MW":
                     augmenter = (Convolve(window="flattop", size=16) * 1)
                 elif param["aug_method"] == "rotation":
                     augmenter = (Reverse() @ 0.5 * 1)
@@ -150,7 +151,7 @@ def prepare_data(X, y, subjects, param):
                     augmenter = (Crop(size= 1408) * param["aug_factor"]) 
                 elif param["aug_method"] == "jitter":
                     augmenter = (AddNoise(loc=0.0, scale=0.2, distr='gaussian', kind='additive') * param["aug_factor"])
-                elif param["aug_method"] == "convolve" or param["aug_method"] == "magnitude_warping":
+                elif param["aug_method"] == "convolve" or param["aug_method"] == "MW":
                     augmenter = (Convolve(window="flattop", size=16) * param["aug_factor"])
                 elif param["aug_method"] == "rotation":
                     augmenter = (Reverse() @ 0.5 * param["aug_factor"])
@@ -168,7 +169,7 @@ def prepare_data(X, y, subjects, param):
         elif param["aug_method"] == "DGW" or param["aug_method"] == "RGW" or param["aug_method"] == "TW" or param["aug_method"] == "WW" or param["aug_method"] == "spawner" or param["aug_method"] == "permutation" or param["aug_method"] == "GAN":
 
         # Calculate the number of samples to select (20% of the total samples)
-            if param["aug_factor"] == 2:
+            if param["aug_factor"] >= 2:
                 subjects_aug = np.repeat(subjects, repeats= param["aug_factor"])
             else:                
                 mask = int(param["aug_factor"] * X.shape[0])
@@ -182,41 +183,158 @@ def prepare_data(X, y, subjects, param):
                     x_aug_1, y_aug_1 = DGW(X_for_aug, y_for_aug) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
                     x_aug_2, y_aug_2 = DGW(X_for_aug, y_for_aug) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
                     x_aug, y_aug = np.concatenate([x_aug_1, x_aug_2], axis= 0), np.concatenate([y_aug_1, y_aug_2], axis= 0)
+                elif param["aug_factor"] == 3:
+                    # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                    x_aug_1, y_aug_1 = DGW(X_for_aug, y_for_aug)
+                    # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                    x_aug_2, y_aug_2 = DGW(X_for_aug, y_for_aug)
+                    x_aug_3, y_aug_3 = DGW(X_for_aug, y_for_aug)
+                    x_aug, y_aug = np.concatenate([x_aug_1, x_aug_2, x_aug_3], axis=0), np.concatenate([y_aug_1, y_aug_2, y_aug_3], axis=0)
+                elif param["aug_factor"] == 4:
+                    # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                    x_aug_1, y_aug_1 = DGW(X_for_aug, y_for_aug)
+                    # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                    x_aug_2, y_aug_2 = DGW(X_for_aug, y_for_aug)
+                    x_aug_3, y_aug_3 = DGW(X_for_aug, y_for_aug)
+                    x_aug_4, y_aug_4 = DGW(X_for_aug, y_for_aug)
+                    x_aug, y_aug = np.concatenate([x_aug_1, x_aug_2, x_aug_3, x_aug_4], axis=0), np.concatenate(
+                        [y_aug_1, y_aug_2, y_aug_3, y_aug_4], axis=0)
+                    
                 else:
                     x_aug, y_aug =  DGW(x_frac_aug, y_frac_aug) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d). 
+                    
             elif param["aug_method"] == "RGW":
                 if param["aug_factor"] == 2:
                     x_aug_1, y_aug_1 = RGW(X_for_aug, y_for_aug) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
                     x_aug_2, y_aug_2 = RGW(X_for_aug, y_for_aug) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
                     x_aug, y_aug = np.concatenate([x_aug_1, x_aug_2], axis= 0), np.concatenate([y_aug_1, y_aug_2], axis= 0)
+                elif param["aug_factor"] ==3:
+                    # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                    x_aug_1, y_aug_1 = RGW(X_for_aug, y_for_aug)
+                    # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                    x_aug_2, y_aug_2 = RGW(X_for_aug, y_for_aug)
+                    x_aug_3, y_aug_3 = RGW(X_for_aug, y_for_aug)
+                    x_aug, y_aug = np.concatenate([x_aug_1, x_aug_2, x_aug_3], axis=0), np.concatenate([y_aug_1, y_aug_2, y_aug_3], axis=0)
+                elif param["aug_factor"] == 4:
+                    # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                    x_aug_1, y_aug_1 = RGW(X_for_aug, y_for_aug)
+                    # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                    x_aug_2, y_aug_2 = RGW(X_for_aug, y_for_aug)
+                    x_aug_3, y_aug_3 = RGW(X_for_aug, y_for_aug)
+                    x_aug_4, y_aug_4 = RGW(X_for_aug, y_for_aug)
+                    x_aug, y_aug = np.concatenate([x_aug_1, x_aug_2, x_aug_3, x_aug_4], axis=0), np.concatenate(
+                        [y_aug_1, y_aug_2, y_aug_3, y_aug_4], axis=0)
+                
                 else:
                     x_aug, y_aug =  RGW(x_frac_aug, y_frac_aug) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                    
             elif param['aug_method'] == 'TW':
                 if param["aug_factor"] == 2:
                     x_aug_1, y_aug_1 = TW(X_for_aug, y_for_aug) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
                     x_aug_2, y_aug_2 = TW(X_for_aug, y_for_aug) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
                     x_aug, y_aug = np.concatenate([x_aug_1, x_aug_2], axis= 0), np.concatenate([y_aug_1, y_aug_2], axis= 0)
+                    
+                elif param["aug_factor"] == 3:
+                    # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                    x_aug_1, y_aug_1 = TW(X_for_aug, y_for_aug)
+                    # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                    x_aug_2, y_aug_2 = TW(X_for_aug, y_for_aug)
+                    x_aug_3, y_aug_3 = TW(X_for_aug, y_for_aug)
+                    x_aug, y_aug = np.concatenate([x_aug_1, x_aug_2, x_aug_3], axis=0), np.concatenate(
+                        [y_aug_1, y_aug_2, y_aug_3], axis=0)
+                elif param["aug_factor"] == 4:
+                    # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                    x_aug_1, y_aug_1 = TW(X_for_aug, y_for_aug)
+                    # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                    x_aug_2, y_aug_2 = TW(X_for_aug, y_for_aug)
+                    x_aug_3, y_aug_3 = TW(X_for_aug, y_for_aug)
+                    x_aug_4, y_aug_4 = TW(X_for_aug, y_for_aug)
+                    x_aug, y_aug = np.concatenate([x_aug_1, x_aug_2, x_aug_3, x_aug_4], axis=0), np.concatenate(
+                        [y_aug_1, y_aug_2, y_aug_3, y_aug_4], axis=0)
+                    
                 else:
                     x_aug, y_aug =  TW(x_frac_aug, y_frac_aug) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                    
             elif param['aug_method'] == 'WW':
                 if param["aug_factor"] == 2:
                     x_aug_1, y_aug_1 = WW(X_for_aug, y_for_aug) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
                     x_aug_2, y_aug_2 = WW(X_for_aug, y_for_aug) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
                     x_aug, y_aug = np.concatenate([x_aug_1, x_aug_2], axis= 0), np.concatenate([y_aug_1, y_aug_2], axis= 0)
+                    
+                elif param["aug_factor"] == 3:
+                    # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                    x_aug_1, y_aug_1 = WW(X_for_aug, y_for_aug)
+                    # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                    x_aug_2, y_aug_2 = WW(X_for_aug, y_for_aug)
+                    x_aug_3, y_aug_3 = WW(X_for_aug, y_for_aug)
+                    x_aug, y_aug = np.concatenate([x_aug_1, x_aug_2, x_aug_3], axis=0), np.concatenate(
+                        [y_aug_1, y_aug_2, y_aug_3], axis=0)
+                elif param["aug_factor"] == 4:
+                    # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                    x_aug_1, y_aug_1 = WW(X_for_aug, y_for_aug)
+                    # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                    x_aug_2, y_aug_2 = WW(X_for_aug, y_for_aug)
+                    x_aug_3, y_aug_3 = WW(X_for_aug, y_for_aug)
+                    x_aug_4, y_aug_4 = WW(X_for_aug, y_for_aug)
+                    x_aug, y_aug = np.concatenate([x_aug_1, x_aug_2, x_aug_3, x_aug_4], axis=0), np.concatenate(
+                        [y_aug_1, y_aug_2, y_aug_3, y_aug_4], axis=0)
+                    
                 else:
                     x_aug, y_aug =  WW(x_frac_aug, y_frac_aug) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                    
+                    
             elif param['aug_method'] == 'spawner':
                 if param["aug_factor"] == 2:
                     x_aug_1, y_aug_1 = spawner(X_for_aug, y_for_aug) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
                     x_aug_2, y_aug_2 = spawner(X_for_aug, y_for_aug) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
                     x_aug, y_aug = np.concatenate([x_aug_1, x_aug_2], axis= 0), np.concatenate([y_aug_1, y_aug_2], axis= 0)
+                    
+                elif param["aug_factor"] == 3:
+                        # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                    x_aug_1, y_aug_1 = spawner(X_for_aug, y_for_aug)
+                    # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                    x_aug_2, y_aug_2 = spawner(X_for_aug, y_for_aug)
+                    x_aug_3, y_aug_3 = spawner(X_for_aug, y_for_aug)
+                    x_aug, y_aug = np.concatenate([x_aug_1, x_aug_2, x_aug_3], axis=0), np.concatenate(
+                        [y_aug_1, y_aug_2, y_aug_3], axis=0)
+                elif param["aug_factor"] == 4:
+                    # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                    x_aug_1, y_aug_1 = spawner(X_for_aug, y_for_aug)
+                    # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                    x_aug_2, y_aug_2 = spawner(X_for_aug, y_for_aug)
+                    x_aug_3, y_aug_3 = spawner(X_for_aug, y_for_aug)
+                    x_aug_4, y_aug_4 = spawner(X_for_aug, y_for_aug)
+                    x_aug, y_aug = np.concatenate([x_aug_1, x_aug_2, x_aug_3, x_aug_4], axis=0), np.concatenate(
+                        [y_aug_1, y_aug_2, y_aug_3, y_aug_4], axis=0)
+                    
                 else:
                     x_aug, y_aug =  spawner(x_frac_aug, y_frac_aug) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                    
+                    
             elif param['aug_method'] == 'permutation':
                 if param["aug_factor"] == 2:
                     x_aug_1, y_aug_1 = permutation(X_for_aug, y_for_aug) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
                     x_aug_2, y_aug_2 = permutation(X_for_aug, y_for_aug) # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
                     x_aug, y_aug = np.concatenate([x_aug_1, x_aug_2], axis= 0), np.concatenate([y_aug_1, y_aug_2], axis= 0)
+                    
+                elif param["aug_factor"] == 3:
+                    # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                    x_aug_1, y_aug_1 = permutation(X_for_aug, y_for_aug)
+                    # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                    x_aug_2, y_aug_2 = permutation(X_for_aug, y_for_aug)
+                    x_aug_3, y_aug_3 = permutation(X_for_aug, y_for_aug)
+                    x_aug, y_aug = np.concatenate([x_aug_1, x_aug_2, x_aug_3], axis=0), np.concatenate(
+                        [y_aug_1, y_aug_2, y_aug_3], axis=0)
+                elif param["aug_factor"] == 4:
+                    # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                    x_aug_1, y_aug_1 = permutation(X_for_aug, y_for_aug)
+                    # shape of x_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
+                    x_aug_2, y_aug_2 = permutation(X_for_aug, y_for_aug)
+                    x_aug_3, y_aug_3 = permutation(X_for_aug, y_for_aug)
+                    x_aug_4, y_aug_4 = permutation(X_for_aug, y_for_aug)
+                    x_aug, y_aug = np.concatenate([x_aug_1, x_aug_2, x_aug_3, x_aug_4], axis=0), np.concatenate(
+                        [y_aug_1, y_aug_2, y_aug_3, y_aug_4], axis=0)
+                    
                 else:
                     x_aug, y_aug = permutation(x_frac_aug, y_frac_aug) # shape ofx_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
             
@@ -342,10 +460,10 @@ if __name__ == "__main__":
        # Deep learning
     param.update({"epochs": 100, "bs": 32, "lr": 0.0001, "smooth": 256, "resample": 256, "dense_out": 100, "minmax_norm": True})
     
-    # ["crop", "jitter", "convolve", "rotation", "quantize", "drift", "TW", "DGW", "RGW", "spawner", "permutation"]
+    # [ "jitter", "rotation", "scaling", "magnitude_warping", "slicing", "TW", "WW",  "permutation", "RGW", "DGW", "spawner", "GAN"]
     for clf in [mlp]:
-         for aug_method in ["WW"]:
-            for aug_factor in [1, 2]:
+        for aug_method in ["MW"]:
+            for aug_factor in [3, 4]:
                 
                 try:
                     param["aug_factor"] = aug_factor

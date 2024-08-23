@@ -1,4 +1,6 @@
 # This file enlisted aLL the models from the previous researcher.
+
+# pylint: disable-all
 import os.path
 from pathlib import Path
 from datetime import datetime
@@ -184,24 +186,21 @@ def CONVLSTM_2D(n_steps, n_length, n_features, n_outputs, filterSizes, nkerns, a
     return model
 
 
-def saveResultsCSV(method, modelname, epochs, batch_size, accuracy, average_fscore_macro, average_fscore_weighted,
+def saveResultsCSV(method, factor, modelname, epochs, batch_size, accuracy, average_fscore_macro, average_fscore_weighted,
                    nKerns, filterSizes):
-    path = './results/'
+    path = '/home/abidhasan/Documents/DA_Project/Opportunity/results/'
     if not os.path.exists(path):
         os.makedirs(path)
 
-    fileString = './results/results.csv'
+    fileString = '/home/abidhasan/Documents/DA_Project/Opportunity/results/opportunity.csv'
     file = Path(fileString)
 
     now = datetime.now()
 
     if not file.exists():
         f = open(fileString, 'w')
-        f.write(
-            'Finished on; Modelname; Epochs; Batch_Size; accuracy; Average_fscore_Macro; Average_fscores_weighted; nKerns; filterSize\n')
+        f.write('Finished on; Method; Factor; Modelname; Epochs; Batch_Size; accuracy; Average_fscore_Macro; Average_fscores_weighted\n')
         f.close()
     with open(fileString, "a") as f:
-        f.write(
-            '{};{};{};{};{};{};{};{};{}:{}\n'.format(now, method, modelname, epochs, batch_size, accuracy, average_fscore_macro,
-                                                  average_fscore_weighted, nKerns, filterSizes))
+        f.write('{};{};{};{};{};{};{};{};{}\n'.format(now, method, factor, modelname, epochs, batch_size, accuracy, average_fscore_macro, average_fscore_weighted))
     f.close()

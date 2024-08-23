@@ -1,4 +1,6 @@
 # This file enlisted aLL the models from the previous researcher.
+
+# pylint: disable-all
 import tensorflow as tf
 from keras.models import Sequential
 from keras.layers import BatchNormalization
@@ -9,10 +11,7 @@ from keras.layers import Conv1D, Conv2D
 
 from keras.layers import MaxPooling1D, MaxPooling2D, AveragePooling2D
 from keras.layers import LSTM, Lambda, Reshape
-from sklearn.model_selection import GridSearchCV
-from scikeras.wrappers import KerasClassifier
-from sklearn.model_selection import KFold
-from keras.callbacks import ModelCheckpoint
+
 
 def conv1D(activation, init_mode, optimizer, dropout_rate, n_timesteps, n_features, n_outputs):
     model = Sequential()

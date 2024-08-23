@@ -1,14 +1,16 @@
-def train_test_split():
-    global trainx, trainy, testx, testy, valx, valy
-    import pandas as pd
-    import numpy as np
-    import load_data
-    import windowed_numpy_3Darray
-    import seg_SMOTE
-    import seg_TSAUG
-    import synthetic_data_generator
-    import DTW
+# pylint: disable-all
+import pandas as pd
+import numpy as np
+import load_data
+import windowed_numpy_3Darray
+import aug_SMOTE
+import aug_TSAUG
+import synthetic_data_generator
+import augmenter
 
+def train_test_split(factor, family):
+    global trainx, trainy, testx, testy, valx, valy
+    
     s1r1 = load_data.load_data("S1-ADL1")
     s1r2 = load_data.load_data("S1-ADL2")
     s1r3 = load_data.load_data("S1-ADL3")
@@ -100,36 +102,33 @@ def train_test_split():
                 'Close Drawer 2',
                 'Open Drawer 3', 'Close Drawer 3', 'Clean Table', 'Drink from Cup', 'Toggle Switch']
 
-# ----------------------- Asking Which Method Do you want to use.
-
-    family = input('Enter the Augmentation Family NAME(SMOTE, TSAUG, RTW, DTW, GAN):')
 
 # --------------------------Applying the SMOTE to Generate the syntetic data--------------------------------------------
     if family == 'SMOTE':
-        s1r1 = seg_SMOTE.seg_SMOTE(s1r1)
-        s1r2 = seg_SMOTE.seg_SMOTE(s1r2)
-        s1r3 = seg_SMOTE.seg_SMOTE(s1r3)
-        s1r4 = seg_SMOTE.seg_SMOTE(s1r4)
-        s1r5 = seg_SMOTE.seg_SMOTE(s1r5)
-        s1_drill = seg_SMOTE.seg_SMOTE(s1_drill)
-        s2r1 = seg_SMOTE.seg_SMOTE(s2r1)
-        s2r2 = seg_SMOTE.seg_SMOTE(s2r2)
-        s2r3 = seg_SMOTE.seg_SMOTE(s2r3)
-        s2r4 = seg_SMOTE.seg_SMOTE(s2r4)
-        s2r5 = seg_SMOTE.seg_SMOTE(s2r5)
-        s2_drill = seg_SMOTE.seg_SMOTE(s2_drill)
-        s3r1 = seg_SMOTE.seg_SMOTE(s3r1)
-        s3r2 = seg_SMOTE.seg_SMOTE(s3r2)
-        s3r3 = seg_SMOTE.seg_SMOTE(s3r3)
-        s3r4 = seg_SMOTE.seg_SMOTE(s3r4)
-        s3r5 = seg_SMOTE.seg_SMOTE(s3r5)
-        s3_drill = seg_SMOTE.seg_SMOTE(s3_drill)
-        s4r1 = seg_SMOTE.seg_SMOTE(s4r1)
-        s4r2 = seg_SMOTE.seg_SMOTE(s4r2)
-        s4r3 = seg_SMOTE.seg_SMOTE(s4r3)
-        s4r4 = seg_SMOTE.seg_SMOTE(s4r4)
-        s4r5 = seg_SMOTE.seg_SMOTE(s4r5)
-        s4_drill = seg_SMOTE.seg_SMOTE(s4_drill)
+        s1r1 = aug_SMOTE.SMOTE(s1r1)
+        s1r2 = aug_SMOTE.SMOTE(s1r2)
+        s1r3 = aug_SMOTE.SMOTE(s1r3)
+        s1r4 = aug_SMOTE.SMOTE(s1r4)
+        s1r5 = aug_SMOTE.SMOTE(s1r5)
+        s1_drill = aug_SMOTE.SMOTE(s1_drill)
+        s2r1 = aug_SMOTE.SMOTE(s2r1)
+        s2r2 = aug_SMOTE.SMOTE(s2r2)
+        s2r3 = aug_SMOTE.SMOTE(s2r3)
+        s2r4 = aug_SMOTE.SMOTE(s2r4)
+        s2r5 = aug_SMOTE.SMOTE(s2r5)
+        s2_drill = aug_SMOTE.SMOTE(s2_drill)
+        s3r1 = aug_SMOTE.SMOTE(s3r1)
+        s3r2 = aug_SMOTE.SMOTE(s3r2)
+        s3r3 = aug_SMOTE.SMOTE(s3r3)
+        s3r4 = aug_SMOTE.SMOTE(s3r4)
+        s3r5 = aug_SMOTE.SMOTE(s3r5)
+        s3_drill = aug_SMOTE.SMOTE(s3_drill)
+        s4r1 = aug_SMOTE.SMOTE(s4r1)
+        s4r2 = aug_SMOTE.SMOTE(s4r2)
+        s4r3 = aug_SMOTE.SMOTE(s4r3)
+        s4r4 = aug_SMOTE.SMOTE(s4r4)
+        s4r5 = aug_SMOTE.SMOTE(s4r5)
+        s4_drill = aug_SMOTE.SMOTE(s4_drill)
 
         # model_paper = input('Enter the Model Paper:')
         model_paper = 'ROGGEN'
@@ -220,34 +219,34 @@ def train_test_split():
         #model_paper = input('Enter The Model Paper:')
         model_paper = 'ROGGEN'
         if model_paper == 'FREDERIC':
-            trainxs1r1, trainys1r1 = seg_TSAUG.seg_TSAUG(s1r1)
-            trainxs1r2, trainys1r2 = seg_TSAUG.seg_TSAUG(s1r2)
-            trainxs1r3, trainys1r3 = seg_TSAUG.seg_TSAUG(s1r3)
-            trinxs1_drill, trainys1_drill = seg_TSAUG.seg_TSAUG(s1_drill)
+            trainxs1r1, trainys1r1 = aug_TSAUG.TSAUG(s1r1)
+            trainxs1r2, trainys1r2 = aug_TSAUG.TSAUG(s1r2)
+            trainxs1r3, trainys1r3 = aug_TSAUG.TSAUG(s1r3)
+            trinxs1_drill, trainys1_drill = aug_TSAUG.TSAUG(s1_drill)
 
             testxs1r4, testys1r4 = windowed_numpy_3Darray.slided_numpy_array(s1r4)
             testxs1r5, testys1r5 = windowed_numpy_3Darray.slided_numpy_array(s1r5)
 
-            trainxs2r1, trainys2r1 = seg_TSAUG.seg_TSAUG(s2r1)
-            trainxs2r2, trainys2r2 = seg_TSAUG.seg_TSAUG(s2r2)
-            trainxs2r3, trainys2r3 = seg_TSAUG.seg_TSAUG(s2r3)
-            trinxs2_drill, trainys2_drill = seg_TSAUG.seg_TSAUG(s2_drill)
+            trainxs2r1, trainys2r1 = aug_TSAUG.TSAUG(s2r1)
+            trainxs2r2, trainys2r2 = aug_TSAUG.TSAUG(s2r2)
+            trainxs2r3, trainys2r3 = aug_TSAUG.TSAUG(s2r3)
+            trinxs2_drill, trainys2_drill = aug_TSAUG.TSAUG(s2_drill)
 
             testxs2r4, testys2r4 = windowed_numpy_3Darray.slided_numpy_array(s2r4)
             testxs2r5, testys2r5 = windowed_numpy_3Darray.slided_numpy_array(s2r5)
 
-            trainxs3r1, trainys3r1 = seg_TSAUG.seg_TSAUG(s3r1)
-            trainxs3r2, trainys3r2 = seg_TSAUG.seg_TSAUG(s3r2)
-            trainxs3r3, trainys3r3 = seg_TSAUG.seg_TSAUG(s3r3)
-            trinxs3_drill, trainys3_drill = seg_TSAUG.seg_TSAUG(s3_drill)
+            trainxs3r1, trainys3r1 = aug_TSAUG.TSAUG(s3r1)
+            trainxs3r2, trainys3r2 = aug_TSAUG.TSAUG(s3r2)
+            trainxs3r3, trainys3r3 = aug_TSAUG.TSAUG(s3r3)
+            trinxs3_drill, trainys3_drill = aug_TSAUG.TSAUG(s3_drill)
 
             testxs3r4, testys3r4 = windowed_numpy_3Darray.slided_numpy_array(s3r4)
             testxs3r5, testys3r5 = windowed_numpy_3Darray.slided_numpy_array(s3r5)
 
-            trainxs4r1, trainys4r1 = seg_TSAUG.seg_TSAUG(s4r1)
-            trainxs4r2, trainys4r2 = seg_TSAUG.seg_TSAUG(s4r2)
-            trainxs4r3, trainys4r3 = seg_TSAUG.seg_TSAUG(s4r3)
-            trinxs4_drill, trainys4_drill = seg_TSAUG.seg_TSAUG(s4_drill)
+            trainxs4r1, trainys4r1 = aug_TSAUG.TSAUG(s4r1)
+            trainxs4r2, trainys4r2 = aug_TSAUG.TSAUG(s4r2)
+            trainxs4r3, trainys4r3 = aug_TSAUG.TSAUG(s4r3)
+            trinxs4_drill, trainys4_drill = aug_TSAUG.TSAUG(s4_drill)
 
             testxs4r4, testys4r4 = windowed_numpy_3Darray.slided_numpy_array(s4r4)
             testxs4r5, testys4r5 = windowed_numpy_3Darray.slided_numpy_array(s4r5)
@@ -269,20 +268,19 @@ def train_test_split():
 
             valy = testys1r4
 
-
         elif model_paper == 'ROGGEN':
-            trainxs1r1, trainys1r1 = seg_TSAUG.seg_TSAUG(s1r1)
-            trainxs1r2, trainys1r2 = seg_TSAUG.seg_TSAUG(s1r2)
-            trainxs1r3, trainys1r3 = seg_TSAUG.seg_TSAUG(s1r3)
-            trainxs1_drill, trainys1_drill = seg_TSAUG.seg_TSAUG(s1_drill)
-            trainxs1r4, trainys1r4 = seg_TSAUG.seg_TSAUG(s1r4)
-            trainxs1r5, trainys1r5 = seg_TSAUG.seg_TSAUG(s1r5)
-            trainxs2r1, trainys2r1 = seg_TSAUG.seg_TSAUG(s2r1)
-            trainxs2r2, trainys2r2 = seg_TSAUG.seg_TSAUG(s2r2)
-            trainxs2_drill, trainys2_drill = seg_TSAUG.seg_TSAUG(s2_drill)
-            trainxs3r1, trainys3r1 = seg_TSAUG.seg_TSAUG(s3r1)
-            trainxs3r2, trainys3r2 = seg_TSAUG.seg_TSAUG(s3r2)
-            trainxs3_drill, trainys3_drill = seg_TSAUG.seg_TSAUG(s3_drill)
+            trainxs1r1, trainys1r1 = aug_TSAUG.TSAUG(s1r1)
+            trainxs1r2, trainys1r2 = aug_TSAUG.TSAUG(s1r2)
+            trainxs1r3, trainys1r3 = aug_TSAUG.TSAUG(s1r3)
+            trainxs1_drill, trainys1_drill = aug_TSAUG.TSAUG(s1_drill)
+            trainxs1r4, trainys1r4 = aug_TSAUG.TSAUG(s1r4)
+            trainxs1r5, trainys1r5 = aug_TSAUG.TSAUG(s1r5)
+            trainxs2r1, trainys2r1 = aug_TSAUG.TSAUG(s2r1)
+            trainxs2r2, trainys2r2 = aug_TSAUG.TSAUG(s2r2)
+            trainxs2_drill, trainys2_drill = aug_TSAUG.TSAUG(s2_drill)
+            trainxs3r1, trainys3r1 = aug_TSAUG.TSAUG(s3r1)
+            trainxs3r2, trainys3r2 = aug_TSAUG.TSAUG(s3r2)
+            trainxs3_drill, trainys3_drill = aug_TSAUG.TSAUG(s3_drill)
 
             valxs2r3, valys2r3 = windowed_numpy_3Darray.slided_numpy_array(s2r3)
             valxs3r3, valys3r3 = windowed_numpy_3Darray.slided_numpy_array(s3r3)
@@ -308,7 +306,7 @@ def train_test_split():
             testy = np.concatenate((testys2r4, testys2r5, testys3r4, testys3r5), axis=0)
 
             
-    elif family == 'GAN':
+    elif family == 'cGAN':
         # model_paper = input('Enter The Model Paper:')
         model_paper = 'ROGGEN'
         if model_paper == 'FREDERIC':
@@ -376,7 +374,7 @@ def train_test_split():
             testxs3r5, testys3r5 = windowed_numpy_3Darray.slided_numpy_array(s3r5)
 
             # Generate the  synthetic data from the Generator
-            X_synthetic, Y_synthetic = synthetic_data_generator.GAN_generator()
+            X_synthetic, Y_synthetic = synthetic_data_generator.GAN_generator(factor)
 
             trainx = np.concatenate((trainxs1r1, trainxs1r2, trainxs1r3, trainxs1_drill, trainxs1r4, trainxs1r5, trainxs2r1,
                  trainxs2r2, trainxs2_drill, trainxs3r1, trainxs3r2, trainxs3_drill, X_synthetic), axis=0)
@@ -390,175 +388,22 @@ def train_test_split():
 
             testx = np.concatenate((testxs2r4, testxs2r5, testxs3r4, testxs3r5), axis=0)
             testy = np.concatenate((testys2r4, testys2r5, testys3r4, testys3r5), axis=0)
-           
-            
-    elif family == 'DTW':
-        model_paper = 'ROGGEN'
-        
-        if model_paper == 'ROGGGEN':
-            trainxs1r1, trainys1r1 = DTW.DTW(s1r1)
-            trainxs1r2, trainys1r2 = DTW.DTW(s1r2)
-            trainxs1r3, trainys1r3 = DTW.DTW(s1r3)
-            trainxs1_drill, trainys1_drill = DTW.DTW(s1_drill)
-            trainxs1r4, trainys1r4 = DTW.DTW(s1r4)
-            trainxs1r5, trainys1r5 = DTW.DTW(s1r5)
-            trainxs2r1, trainys2r1 = DTW.DTW(s2r1)
-            trainxs2r2, trainys2r2 = DTW.DTW(s2r2)
-            trainxs2_drill, trainys2_drill = DTW.DTW(s2_drill)
-            trainxs3r1, trainys3r1 = DTW.DTW(s3r1)
-            trainxs3r2, trainys3r2 = DTW.DTW(s3r2)
-            trainxs3_drill, trainys3_drill = DTW.DTW(s3_drill)
-            valxs2r3, valys2r3 = windowed_numpy_3Darray.slided_numpy_array(s2r3)
-            valxs3r3, valys3r3 = windowed_numpy_3Darray.slided_numpy_array(s3r3)
-            testxs2r4, testys2r4 = windowed_numpy_3Darray.slided_numpy_array(s2r4)
-            testxs2r5, testys2r5 = windowed_numpy_3Darray.slided_numpy_array(s2r5)
-            testxs3r4, testys3r4 = windowed_numpy_3Darray.slided_numpy_array(s3r4)
-            testxs3r5, testys3r5 = windowed_numpy_3Darray.slided_numpy_array(s3r5)
-            
-            # Concatenate the real and synthetic data
-            trainx = np.concatenate((trainxs1r1, trainxs1r2, trainxs1r3, trainxs1_drill, trainxs1r4, trainxs1r5, trainxs2r1,
-                 trainxs2r2, trainxs2_drill, trainxs3r1, trainxs3r2, trainxs3_drill), axis=0)
-            trainy = np.concatenate((trainys1r1, trainys1r2, trainys1r3, trainys1_drill, trainys1r4, trainys1r5, trainys2r1,
-                 trainys2r2, trainys2_drill, trainys3r1, trainys3r2, trainys3_drill), axis=0)
-            valx = np.concatenate((valxs2r3, valxs3r3), axis=0)
-            valy = np.concatenate((valys2r3, valys3r3), axis=0)
-            testx = np.concatenate((testxs2r4, testxs2r5, testxs3r4, testxs3r5), axis=0)
-            testy = np.concatenate((testys2r4, testys2r5, testys3r4, testys3r5), axis=0)
-            
-        elif model_paper == 'FREDERIC':
-            trainxs1r1, trainys1r1 = DTW.DTW(s1r1)
-            trainxs1r2, trainys1r2 = DTW.DTW(s1r2)
-            trainxs1r3, trainys1r3 = DTW.DTW(s1r3)
-            trinxs1_drill, trainys1_drill = DTW.DTW(s1_drill)
-            testxs1r4, testys1r4 = windowed_numpy_3Darray.slided_numpy_array(s1r4)
-            testxs1r5, testys1r5 = windowed_numpy_3Darray.slided_numpy_array(s1r5)
-            trainxs2r1, trainys2r1 = DTW.DTW(s2r1)
-            trainxs2r2, trainys2r2 = DTW.DTW(s2r2)
-            trainxs2r3, trainys2r3 = DTW.DTW(s2r3)
-            trinxs2_drill, trainys2_drill = DTW.DTW(s2_drill)
-            testxs2r4, testys2r4 = windowed_numpy_3Darray.slided_numpy_array(s2r4)
-            testxs2r5, testys2r5 = windowed_numpy_3Darray.slided_numpy_array(s2r5)
-            trainxs3r1, trainys3r1 = DTW.DTW(s3r1)
-            trainxs3r2, trainys3r2 = DTW.DTW(s3r2)
-            trainxs3r3, trainys3r3 = DTW.DTW(s3r3)
-            trinxs3_drill, trainys3_drill = DTW.DTW(s3_drill)
-            testxs3r4, testys3r4 = windowed_numpy_3Darray.slided_numpy_array(s3r4)
-            testxs3r5, testys3r5 = windowed_numpy_3Darray.slided_numpy_array(s3r5)
-            trainxs4r1, trainys4r1 = DTW.DTW(s4r1)
-            trainxs4r2, trainys4r2 = DTW.DTW(s4r2)
-            trainxs4r3, trainys4r3 = DTW.DTW(s4r3)
-            trinxs4_drill, trainys4_drill = DTW.DTW(s4_drill)
-            testxs4r4, testys4r4 = windowed_numpy_3Darray.slided_numpy_array(s4r4)
-            testxs4r5, testys4r5 = windowed_numpy_3Darray.slided_numpy_array(s4r5)
-            
-            # Concatenate real and synthetic datasets
-            trainx = np.concatenate(
-                (trainxs1r1, trainxs1r2, trainxs1r3, trinxs1_drill, trainxs2r1, trainxs2r2, trainxs2r3,
-                 trinxs2_drill, trainxs3r1, trainxs3r2, trainxs3r3, trinxs3_drill, trainxs4r1, trainxs4r2, trainxs4r3,
-                 trinxs4_drill), axis=0)
-            trainy = np.concatenate((trainys1r1, trainys1r2, trainys1r3, trainys1_drill, trainys2r1, trainys2r2,
-                                     trainys2r3, trainys2_drill, trainys3r1,
-                                     trainys3r2, trainys3r3, trainys3_drill, trainys4r1, trainys4r2, trainys4r3,
-                                     trainys4_drill), axis=0)
-            testx = np.concatenate(
-                (testxs1r4, testxs1r5, testxs2r4, testxs2r5, testxs3r4, testxs3r5, testxs4r4, testxs4r5), axis=0)
-            testy = np.concatenate(
-                (testys1r4, testys1r5, testys2r4, testys2r5, testys3r4, testys3r5, testys4r4, testys4r5), axis=0)
-            valx = np.concatenate((trainxs2r3, trainxs3r3), axis=0)
-
-            valy = np.concatenate((trainys2r3, trainys3r3), axis=0)
-            
-    elif family == 'RTW':
-        model_paper = 'ROGGEN'
-        if model_paper == 'ROGGEN':
-            trainxs1r1, trainys1r1 = DTW.RTW(s1r1)
-            trainxs1r2, trainys1r2 = DTW.RTW(s1r2)
-            trainxs1r3, trainys1r3 = DTW.RTW(s1r3)
-            trainxs1_drill, trainys1_drill = DTW.RTW(s1_drill)
-            trainxs1r4, trainys1r4 = DTW.RTW(s1r4)
-            trainxs1r5, trainys1r5 = DTW.RTW(s1r5)
-            trainxs2r1, trainys2r1 = DTW.RTW(s2r1)
-            trainxs2r2, trainys2r2 = DTW.RTW(s2r2)
-            trainxs2_drill, trainys2_drill = DTW.RTW(s2_drill)
-            trainxs3r1, trainys3r1 = DTW.RTW(s3r1)
-            trainxs3r2, trainys3r2 = DTW.RTW(s3r2)
-            trainxs3_drill, trainys3_drill = DTW.RTW(s3_drill)
-            valxs2r3, valys2r3 = windowed_numpy_3Darray.slided_numpy_array(s2r3)
-            valxs3r3, valys3r3 = windowed_numpy_3Darray.slided_numpy_array(s3r3)
-            testxs2r4, testys2r4 = windowed_numpy_3Darray.slided_numpy_array(s2r4)
-            testxs2r5, testys2r5 = windowed_numpy_3Darray.slided_numpy_array(s2r5)
-            testxs3r4, testys3r4 = windowed_numpy_3Darray.slided_numpy_array(s3r4)
-            testxs3r5, testys3r5 = windowed_numpy_3Darray.slided_numpy_array(s3r5)
-            
-            # Concatenate the real and synthetic data
-            trainx = np.concatenate((trainxs1r1, trainxs1r2, trainxs1r3, trainxs1_drill, trainxs1r4, trainxs1r5, trainxs2r1,
-                 trainxs2r2, trainxs2_drill, trainxs3r1, trainxs3r2, trainxs3_drill), axis=0)
-            trainy = np.concatenate((trainys1r1, trainys1r2, trainys1r3, trainys1_drill, trainys1r4, trainys1r5, trainys2r1,
-                 trainys2r2, trainys2_drill, trainys3r1, trainys3r2, trainys3_drill), axis=0)
-            valx = np.concatenate((valxs2r3, valxs3r3), axis=0)
-            valy = np.concatenate((valys2r3, valys3r3), axis=0)
-            testx = np.concatenate((testxs2r4, testxs2r5, testxs3r4, testxs3r5), axis=0)
-            testy = np.concatenate((testys2r4, testys2r5, testys3r4, testys3r5), axis=0)
-            
-        elif model_paper == 'FREDERIC':
-            trainxs1r1, trainys1r1 = DTW.RTW(s1r1)
-            trainxs1r2, trainys1r2 = DTW.RTW(s1r2)
-            trainxs1r3, trainys1r3 = DTW.RTW(s1r3)
-            trinxs1_drill, trainys1_drill = DTW.RTW(s1_drill)
-            testxs1r4, testys1r4 = windowed_numpy_3Darray.slided_numpy_array(s1r4)
-            testxs1r5, testys1r5 = windowed_numpy_3Darray.slided_numpy_array(s1r5)
-            trainxs2r1, trainys2r1 = DTW.RTW(s2r1)
-            trainxs2r2, trainys2r2 = DTW.RTW(s2r2)
-            trainxs2r3, trainys2r3 = DTW.RTW(s2r3)
-            trinxs2_drill, trainys2_drill = DTW.RTW(s2_drill)
-            testxs2r4, testys2r4 = windowed_numpy_3Darray.slided_numpy_array(s2r4)
-            testxs2r5, testys2r5 = windowed_numpy_3Darray.slided_numpy_array(s2r5)
-            trainxs3r1, trainys3r1 = DTW.RTW(s3r1)
-            trainxs3r2, trainys3r2 = DTW.RTW(s3r2)
-            trainxs3r3, trainys3r3 = DTW.RTW(s3r3)
-            trinxs3_drill, trainys3_drill = DTW.RTW(s3_drill)
-            testxs3r4, testys3r4 = windowed_numpy_3Darray.slided_numpy_array(s3r4)
-            testxs3r5, testys3r5 = windowed_numpy_3Darray.slided_numpy_array(s3r5)
-            trainxs4r1, trainys4r1 = DTW.RTW(s4r1)
-            trainxs4r2, trainys4r2 = DTW.RTW(s4r2)
-            trainxs4r3, trainys4r3 = DTW.RTW(s4r3)
-            trinxs4_drill, trainys4_drill = DTW.RTW(s4_drill)
-            testxs4r4, testys4r4 = windowed_numpy_3Darray.slided_numpy_array(s4r4)
-            testxs4r5, testys4r5 = windowed_numpy_3Darray.slided_numpy_array(s4r5)
-            
-            # Concatenate real and synthetic datasets
-            trainx = np.concatenate(
-                (trainxs1r1, trainxs1r2, trainxs1r3, trinxs1_drill, trainxs2r1, trainxs2r2, trainxs2r3,
-                 trinxs2_drill, trainxs3r1, trainxs3r2, trainxs3r3, trinxs3_drill, trainxs4r1, trainxs4r2, trainxs4r3,
-                 trinxs4_drill), axis=0)
-            trainy = np.concatenate((trainys1r1, trainys1r2, trainys1r3, trainys1_drill, trainys2r1, trainys2r2,
-                                     trainys2r3, trainys2_drill, trainys3r1,
-                                     trainys3r2, trainys3r3, trainys3_drill, trainys4r1, trainys4r2, trainys4r3,
-                                     trainys4_drill), axis=0)
-            testx = np.concatenate(
-                (testxs1r4, testxs1r5, testxs2r4, testxs2r5, testxs3r4, testxs3r5, testxs4r4, testxs4r5), axis=0)
-            testy = np.concatenate(
-                (testys1r4, testys1r5, testys2r4, testys2r5, testys3r4, testys3r5, testys4r4, testys4r5), axis=0)
-            valx = np.concatenate((trainxs2r3, trainxs3r3), axis=0)
-
-            valy = np.concatenate((trainys2r3, trainys3r3), axis=0)
     
-    elif family == 'TW':
+    elif family == 'jitter' or 'scaling' or 'rotation' or 'permutation' or 'magnitude_warp' or 'time_warp' or 'window_warp' or 'spawner' or 'random_guided_warp' or 'discriminative_guided_warp':
         model_paper = 'ROGGEN'
         if model_paper == 'ROGGEN':
-            
-            trainxs1r1, trainys1r1 = DTW.RTW(s1r1)
-            trainxs1r2, trainys1r2 = DTW.RTW(s1r2)
-            trainxs1r3, trainys1r3 = DTW.RTW(s1r3)
-            trainxs1_drill, trainys1_drill = DTW.RTW(s1_drill)
-            trainxs1r4, trainys1r4 = DTW.RTW(s1r4)
-            trainxs1r5, trainys1r5 = DTW.RTW(s1r5)
-            trainxs2r1, trainys2r1 = DTW.RTW(s2r1)
-            trainxs2r2, trainys2r2 = DTW.RTW(s2r2)
-            trainxs2_drill, trainys2_drill = DTW.RTW(s2_drill)
-            trainxs3r1, trainys3r1 = DTW.RTW(s3r1)
-            trainxs3r2, trainys3r2 = DTW.RTW(s3r2)
-            trainxs3_drill, trainys3_drill = DTW.RTW(s3_drill)
+            trainxs1r1, trainys1r1 = augmenter.augmenter(s1r1, factor, family)
+            trainxs1r2, trainys1r2 = augmenter.augmenter(s1r2, factor, family)
+            trainxs1r3, trainys1r3 = augmenter.augmenter(s1r3, factor, family)
+            trainxs1_drill, trainys1_drill = augmenter.augmenter(s1_drill, factor, family)
+            trainxs1r4, trainys1r4 = augmenter.augmenter(s1r4, factor, family)
+            trainxs1r5, trainys1r5 = augmenter.augmenter(s1r5, factor, family)
+            trainxs2r1, trainys2r1 = augmenter.augmenter(s2r1, factor, family)
+            trainxs2r2, trainys2r2 = augmenter.augmenter(s2r2, factor, family)
+            trainxs2_drill, trainys2_drill = augmenter.augmenter(s2_drill, factor, family)
+            trainxs3r1, trainys3r1 = augmenter.augmenter(s3r1, factor, family)
+            trainxs3r2, trainys3r2 = augmenter.augmenter(s3r2, factor, family)
+            trainxs3_drill, trainys3_drill = augmenter.augmenter(s3_drill, factor, family)
             valxs2r3, valys2r3 = windowed_numpy_3Darray.slided_numpy_array(s2r3)
             valxs3r3, valys3r3 = windowed_numpy_3Darray.slided_numpy_array(s3r3)
             testxs2r4, testys2r4 = windowed_numpy_3Darray.slided_numpy_array(s2r4)
@@ -577,28 +422,28 @@ def train_test_split():
             testy = np.concatenate((testys2r4, testys2r5, testys3r4, testys3r5), axis=0)
             
         elif model_paper == 'FREDERIC':
-            trainxs1r1, trainys1r1 = DTW.TW(s1r1)
-            trainxs1r2, trainys1r2 = DTW.TW(s1r2)
-            trainxs1r3, trainys1r3 = DTW.TW(s1r3)
-            trinxs1_drill, trainys1_drill = DTW.TW(s1_drill)
+            trainxs1r1, trainys1r1 = augmenter.augmenter(s1r1, factor, family)
+            trainxs1r2, trainys1r2 = augmenter.augmenter(s1r2, factor, family)
+            trainxs1r3, trainys1r3 = augmenter.augmenter(s1r3, factor, family)
+            trinxs1_drill, trainys1_drill = augmenter.augmenter(s1_drill, factor, family)
             testxs1r4, testys1r4 = windowed_numpy_3Darray.slided_numpy_array(s1r4)
             testxs1r5, testys1r5 = windowed_numpy_3Darray.slided_numpy_array(s1r5)
-            trainxs2r1, trainys2r1 = DTW.TW(s2r1)
-            trainxs2r2, trainys2r2 = DTW.TW(s2r2)
-            trainxs2r3, trainys2r3 = DTW.TW(s2r3)
-            trinxs2_drill, trainys2_drill = DTW.TW(s2_drill)
+            trainxs2r1, trainys2r1 = augmenter.augmenter(s2r1, factor, family)
+            trainxs2r2, trainys2r2 = augmenter.augmenter(s2r2, factor, family)
+            trainxs2r3, trainys2r3 = augmenter.augmenter(s2r3, factor, family)
+            trinxs2_drill, trainys2_drill = augmenter.augmenter(s2_drill, factor, family)
             testxs2r4, testys2r4 = windowed_numpy_3Darray.slided_numpy_array(s2r4)
             testxs2r5, testys2r5 = windowed_numpy_3Darray.slided_numpy_array(s2r5)
-            trainxs3r1, trainys3r1 = DTW.TW(s3r1)
-            trainxs3r2, trainys3r2 = DTW.TW(s3r2)
-            trainxs3r3, trainys3r3 = DTW.TW(s3r3)
-            trinxs3_drill, trainys3_drill = DTW.TW(s3_drill)
+            trainxs3r1, trainys3r1 = augmenter.augmenter(s3r1, factor, family)
+            trainxs3r2, trainys3r2 = augmenter.augmenter(s3r2, factor, family)
+            trainxs3r3, trainys3r3 = augmenter.augmenter(s3r3, factor, family)
+            trinxs3_drill, trainys3_drill = augmenter.augmenter(s3_drill, factor, family)
             testxs3r4, testys3r4 = windowed_numpy_3Darray.slided_numpy_array(s3r4)
             testxs3r5, testys3r5 = windowed_numpy_3Darray.slided_numpy_array(s3r5)
-            trainxs4r1, trainys4r1 = DTW.TW(s4r1)
-            trainxs4r2, trainys4r2 = DTW.TW(s4r2)
-            trainxs4r3, trainys4r3 = DTW.TW(s4r3)
-            trinxs4_drill, trainys4_drill = DTW.TW(s4_drill)
+            trainxs4r1, trainys4r1 = augmenter.augmenter(s4r1, factor, family)
+            trainxs4r2, trainys4r2 = augmenter.augmenter(s4r2, factor, family)
+            trainxs4r3, trainys4r3 = augmenter.augmenter(s4r3, factor, family)
+            trinxs4_drill, trainys4_drill = augmenter.augmenter(s4_drill, factor, family)
             testxs4r4, testys4r4 = windowed_numpy_3Darray.slided_numpy_array(s4r4)
             testxs4r5, testys4r5 = windowed_numpy_3Darray.slided_numpy_array(s4r5)
             
@@ -704,4 +549,4 @@ def train_test_split():
             testy = np.concatenate((testys2r4, testys2r5, testys3r4, testys3r5), axis=0)
            
     del s1r1, s1r2, s1r3, s1r4, s1r5, s1_drill, s2r1, s2r2, s2r3, s2r4, s2r5, s2_drill, s3r1, s3r2, s3r3, s3r4, s3r5, s3_drill, s4r1, s4r2, s4r3, s4r4, s4r5, s4_drill
-    return trainx, trainy, valx, valy, testx, testy
+    return family, trainx, trainy, valx, valy, testx, testy

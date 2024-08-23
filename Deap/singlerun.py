@@ -1,3 +1,4 @@
+# pylint: disable-all
 import gc
 import numpy as np
 from sklearn.metrics import f1_score, accuracy_score
@@ -41,14 +42,13 @@ init_mode = 'glorot_uniform'
 optimizer = 'Adam'
 dropout_rate = 0.6
 batch_size = 32
-epochs = 200
+epochs = 100
 verbose = 2
 modelName = 'CONV2D'
 Aug_factor = "None"
 
 # -----------------------------------------------------------------Using early stop and Model Check point------------------------------------------------------------------------
 es = EarlyStopping(monitor='val_loss', mode='min', verbose=verbose, patience=100)
-kf = KFold(n_splits=5, shuffle=True, random_state=42)
 
 best_accuracy = 0
 best_f1_score = 0
@@ -56,7 +56,7 @@ best_train_accuracy = 0
 best_test_accuracy = 0
 all_accuracies = []
 all_f1_scores = []
-n_splits = 3  # You can adjust this number
+n_splits = 5  # You can adjust this number
 
 # Initialize K-fold cross-validator
 kf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
@@ -105,8 +105,8 @@ std_accuracy = np.std(all_accuracies)
 std_f1_score = np.std(all_f1_scores)
 
 saveResultsCSV(label = label_name, aug_method = method, aug_factor=0, modelname = modelName, epochs = epochs, batch_size = batch_size, 
-                           train_acc = best_train_accuracy, test_acc = best_test_accuracy, best_f1score_macro = best_f1_score, 
+                           test_acc = best_test_accuracy, best_f1score_macro = best_f1_score, 
                            avg_f1score = average_f1_score, std_f1score = std_f1_score,  best_accuracy=best_accuracy, avg_acc = average_accuracy, 
-                           std_acc = std_accuracy ) # In save results we are providing the AUG factor
+               std_acc=std_accuracy, all_accuracies=all_accuracies, all_f1_scores=all_f1_scores)  # In save results we are providing the AUG factor
 
 gc.collect()

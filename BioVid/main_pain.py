@@ -1,11 +1,8 @@
-import os
-from matplotlib import axis
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-# 0 - all logs shown
-# 1 - filter out INFO logs
-# 2 - additionally filter out WARNING logs
-# 3 - additionally filter out ERROR logs
+#pylint: disable-all
 
+from matplotlib import axis
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import platform
 import numpy as np
 import tensorflow as tf
@@ -153,7 +150,7 @@ def prepare_data(X, y, subjects, param):
                     augmenter = (TimeWarp() * 1 )
                 elif param["aug_method"] == "jitter":
                     augmenter = (AddNoise(loc=0.0, scale=0.2, distr='gaussian', kind='additive') * 1)
-                elif param["aug_method"] == "convolve" or param["aug_method"] == "magnitude_warping":
+                elif param["aug_method"] == "convolve" or param["aug_method"] == "MW":
                     augmenter = (Convolve(window="flattop", size=16) * 1)
                 elif param["aug_method"] == "rotation":
                     augmenter = (Reverse() @ 0.5 * 1)
@@ -176,7 +173,7 @@ def prepare_data(X, y, subjects, param):
                     augmenter = (AddNoise(loc=0.0, scale=0.2, distr='gaussian', kind='additive') * param["aug_factor"])
                 elif param["aug_method"] == "tw":
                     augmenter = (TimeWarp() * param["aug_factor"])
-                elif param["aug_method"] == "convolve" or param["aug_method"] == "magnitude_warping":
+                elif param["aug_method"] == "convolve" or param["aug_method"] == "MW":
                     augmenter = (Convolve(window="flattop", size=16) * param["aug_factor"])
                 elif param["aug_method"] == "rotation":
                     augmenter = (Reverse() @ 0.5 * param["aug_factor"])
@@ -451,13 +448,13 @@ if __name__ == "__main__":
     print(subjects.shape)
     print("\n")
     
-    # "crop", "jitter", "tw", "convolve", "rotation", "quantize", "drift", "TW", "WW" "RGW", "DGW", "spawner", "permutation", GAN
+    # "crop", "jitter", "tw", "convolve", "rotation", "quantize", "drift", "TW", "MW", "WW" "RGW", "DGW", "spawner", "permutation", GAN
 
     # Deep learning
     param.update({"epochs": 100, "bs": 32, "lr": 0.0001, "smooth": 256, "resample": 256, "dense_out": 100, "minmax_norm": True})
     for clf in [mlp]:
-        for aug_method in ["WW"]:
-            for aug_factor in [.2, .4, .6, .8, 1, 2, 3, 4]:
+        for aug_method in ["None", "crop", "jitter", "tw", "convolve", "rotation", "quantize", "drift", "TW", "WW" "RGW", "DGW", "spawner", "permutation", "GAN"]:
+            for aug_factor in [None, 0.2, 0.4, 0.6, 0.8, 1, 2, 3, 4]:
                 try:
                     param["aug_factor"] = aug_factor
                     param["aug_method"] = aug_method

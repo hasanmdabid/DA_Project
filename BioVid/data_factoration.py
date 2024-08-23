@@ -77,7 +77,7 @@ print(Aug_downsample.shape)
 
 #---------------------------------------------------Converting the Labels into 1D array------------------------------------------------
 # This part of code will 1st selec the Number of samples  will 
-Aug_frac_x, Aug_frac_y = slided_numpy_array.slided_numpy_array(Aug_downsample)
+Aug_frac_x, Aug_frac_y = slided_numpy_array(Aug_downsample)
 print('Shape of training Augmented data with fractional amount:',Aug_frac_x.shape)
 print('Shape of training Augmented data with fractional amount:',Aug_frac_y.shape)
 

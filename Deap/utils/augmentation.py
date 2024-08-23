@@ -2,6 +2,7 @@
 We want to acknowledge the contribution of Iwana and Uchida's on the scientific paper titled as "An empirical survey of data augmentation for
 time series classification with neural networks. We modifid the code for the moltimodal time series classification. 
 """
+# pylint: disable-all
 
 import numpy as np
 from tqdm import tqdm
@@ -69,7 +70,7 @@ def time_warp(x, sigma=0.2, knot=4):
             ret[i,:,dim] = np.interp(orig_steps, np.clip(scale*time_warp, 0, x.shape[1]-1), pat[:,dim]).T
     return ret
 
-def window_slice(x, reduce_ratio=0.9):
+def slicing(x, reduce_ratio=0.9):
     
     target_len = np.ceil(reduce_ratio*x.shape[1]).astype(int)
     if target_len >= x.shape[1]:
@@ -298,11 +299,11 @@ def discriminative_guided_warp(x, labels, batch_size=6, slope_constraint="symmet
         max_warp = np.max(warp_amount)
         if max_warp == 0:
             # unchanged
-            ret = window_slice(ret, reduce_ratio=0.9)
+            ret = slicing(ret, reduce_ratio=0.9)
         else:
             for i, pat in enumerate(ret):
                 # Variable Sllicing
-                ret[i] = window_slice(pat[np.newaxis,:,:], reduce_ratio=0.9+0.1*warp_amount[i]/max_warp)[0]
+                ret[i] = slicing(pat[np.newaxis,:,:], reduce_ratio=0.9+0.1*warp_amount[i]/max_warp)[0]
     return ret
 
 def discriminative_guided_warp_shape(x, labels, batch_size=6, slope_constraint="symmetric", use_window=True):

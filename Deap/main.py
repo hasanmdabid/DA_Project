@@ -1,3 +1,10 @@
+# pylint: disable-all
+
+from sklearn.metrics import confusion_matrix
+from tqdm import tqdm
+import random
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import gc
 import numpy as np
 from sklearn.metrics import accuracy_score, f1_score
@@ -10,12 +17,10 @@ from save_result import *
 from augmenter import*
 from DTW import *
 from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import classification_report
-from sklearn.metrics import confusion_matrix
-from tqdm import tqdm
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
-import tensorflow as tf
+
+random.seed(50)
+np.random.seed(50)
+
 
 if tf.test.gpu_device_name():
     print('Default GPU Device: {}'.format(tf.test.gpu_device_name()))
@@ -46,10 +51,10 @@ print('Shape of combined_data_valence_slided:', combined_data_valence_slided.sha
 print('Shape of combined_valence_labels:', combined_valence_slided.shape)            #(80640,)
 print('Shape of combined_data_arousal_slided:', combined_data_arousal_slided.shape)  #(80640, 128, 40)
 print('Shape of combined_arousal_labels:', combined_arousal_slided.shape)            #(80640,)
-# ["crop", "jitter", "time_warping", "convolve", "rotation", "drift", "quantize", "TW", "RGW", "DGW" "permutation", "spawner"]
+# ["jitter", "scaling", "rotation",  "slicing", "permutation", "magnitude_warp",  "TW", "WW", "RGW", "DGW", "spawner", "cGAN" ]
  
-param = {   "aug_method" : ['WW'],
-            "aug_factor" : [0.2, 0.4, 0.6, 0.8, 1, 2],
+param = {"aug_method": ["jitter", "scaling", "rotation",  "slicing", "permutation", "magnitude_warp",  "TW", "WW", "RGW", "DGW", "spawner", "cGAN"],
+            "aug_factor" : [0.2, 0.4, 0.6, 0.8, 1, 2, 3, 4],
             "activation" : 'relu', 
             "init_mode" : 'glorot_uniform',
             "optimizer" : 'Adam',
@@ -61,8 +66,8 @@ param = {   "aug_method" : ['WW'],
          }
 
 # Select  the data to be used for the convolution algorithm 
-label_name = input('Which Label do you want to use for the computation?\n')
-if label_name == "valance":
+label_name = input('Which Label do you want to use for the computation? valence or arousal\n')
+if label_name == "valence":
     x = combined_data_valence_slided
     y = combined_valence_slided
 elif label_name == "arousal":
@@ -116,7 +121,7 @@ for aug_method in param["aug_method"]:
         try:
             print(f"Augmentation method is {aug_method} and augmentation factor is {aug_factor}")
             # Define the number of folds
-            n_splits = 3  # You can adjust this number
+            n_splits = 5  # You can adjust this number
 
             # Initialize K-fold cross-validator
             kf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
@@ -168,10 +173,14 @@ for aug_method in param["aug_method"]:
             std_f1_score = np.std(all_f1_scores)
                 
             
-            saveResultsCSV(label=label_name, aug_method = aug_method, aug_factor = aug_factor, modelname = param["modelname"] , epochs = param["epochs"], batch_size = param["batch_size"], 
-                           train_acc = best_train_accuracy, test_acc = best_test_accuracy, best_f1score_macro = best_f1_score, 
-                           avg_f1score = average_f1_score, std_f1score = std_f1_score,  best_accuracy=best_accuracy, avg_acc = average_accuracy, 
-                           std_acc = std_accuracy ) # In save results we are providing the AUG factor
+            saveResultsCSV(label=label_name, aug_method=aug_method, aug_factor=aug_factor, modelname=param["modelname"],
+                            epochs=param["epochs"], batch_size=param["batch_size"], test_acc=best_test_accuracy,
+                            best_f1score_macro=best_f1_score, avg_f1score=average_f1_score, std_f1score=std_f1_score,
+                            best_accuracy=best_accuracy, avg_acc=average_accuracy, std_acc=std_accuracy,
+                            all_accuracies=all_accuracies, all_f1_scores=all_f1_scores) 
+            
+            del x_train, y_train, x_aug, y_aug, all_accuracies, all_f1_scores
+            gc.collect()
             
         except Exception as e:
             print(e)

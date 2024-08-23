@@ -5,24 +5,17 @@
 #----> OUTPUT FORMATE x = (Samples, Row, Columns) 3D, Y = labels (Samples, Row, Column), 3D
 
 
+# pylint: disable-all
+
 import numpy as np
 from tsaug import TimeWarp, Crop, Quantize, Drift, Reverse, Convolve, Pool, AddNoise
-import numpy as np
 from DTW import *
 import synthetic_data_generator
 
 # -----------------Creating the augmenter class---------------------------------------------------
-def augmenter(aug_method, factor):
-    if aug_method == "time_warping":
-        aug = (TimeWarp() * factor)  # random time warping 16 times in parallel)
-    elif aug_method == "crop" or aug_method =="slicing":
-        aug = (Crop(size= 128) * factor)    # random crop subsequences with length 16)
-    elif aug_method == "jitter":
-        aug = (AddNoise(loc=0.0, scale=0.1, distr='gaussian', kind='additive') * factor)  # Loc: Mean of the random noise. scale: The standard deviaton of the random noise. We camn use Nornmnal
-    elif aug_method == "convolve" or aug_method =="magnitude_warping":
+def tsaug(aug_method, factor):
+    if aug_method == "convolve":
         aug = (Convolve(window="flattop", size=16) *factor)  # Convolve time series with a kernel window OF 16.
-    elif aug_method == "rotation":
-        aug = (Reverse() @ 0.8 *factor)  # with 50% probability, reverse the sequence
     elif aug_method == "quantize":
         aug = (Quantize(n_levels=[10, 20, 30]) *factor)  # random quantize to 10-, 20-, or 30- level sets
     elif aug_method == "drift" or aug_method =="scaling":
@@ -35,7 +28,8 @@ def augment(aug_factor, aug_method, label_name, x, y):
     aug_factor_type = type(aug_factor)
     if (aug_factor_type != int) and (aug_factor_type!= float):
             raise ValueError(f"Param 'aug_factor' should be numeric but received '{aug_factor}' with type '{aug_factor_type}'.")
-    if aug_method == "crop" or aug_method == "time_warping" or aug_method == "jitter" or aug_method == "convolve" or aug_method == "rotation" or aug_method == "quantize" or aug_method == "drift" or aug_method == "pool":   
+        
+    if aug_method in ["convolve", "quantize", "drift", "pool"]:   
     # Convertig y to 3D. Becasue all the TSAUG family accpet the input (x and y) in 3D format. Here our input x is 3d and Y is 2 D
         L = 128 
         ov = 0
@@ -51,8 +45,8 @@ def augment(aug_factor, aug_method, label_name, x, y):
         y = y.reshape(y.shape[0], y.shape[1], 1) # Changing shape from 2D to 3D
         
         if ((aug_factor>0) and (aug_factor<1)) :
-            factor = 1
-            aug = augmenter(aug_method, factor)
+            factor = 1   # Firt we will augment the data in to 1 factor. then we will chunk the augmented data by multiplying the aug method
+            aug = tsaug(aug_method, factor)
             x_aug, y_aug = aug.augment(x, y) # Both x_aug and y_aug are 3D
             mask = int(aug_factor* x.shape[0])
             print('mask is:', mask)
@@ -60,11 +54,11 @@ def augment(aug_factor, aug_method, label_name, x, y):
             y_aug = y_aug[:mask] # 3D
         elif aug_factor_type == int :
             factor = aug_factor
-            aug = augmenter(aug_method, factor)
+            aug = tsaug(aug_method, factor)
             x_aug, y_aug = aug.augment(x, y) # Both x and y are 3D
         
         else :
-            print("The augmentation factor must be greater than 0 and less than and 2")
+            print("The augmentation factor must be greater than 0")
 
         #Converting y_aug to 1D array
         nb_segments = y_aug.shape[0]
@@ -78,7 +72,7 @@ def augment(aug_factor, aug_method, label_name, x, y):
         #return x_aug, y_aug
         return x_aug, labels_to_save 
     
-    elif aug_method == "TW" or aug_method == "WW" or aug_method == "RGW" or aug_method == "DGW" or aug_method == "spawner" or aug_method == "permutation":
+    elif aug_method in ["jitter", "scaling", "rotation", "magnitude_warp", "slicing",  "TW", "WW", "RGW", "DGW", "spawner", "permutation"]:
                
         if ((aug_factor >0) and (aug_factor<1)):
             mask = int(aug_factor * x.shape[0])
@@ -95,8 +89,7 @@ def augment(aug_factor, aug_method, label_name, x, y):
                 y_aug.append(y_aug_den)             
             x_aug, y_aug = np.vstack(x_aug), np.vstack(y_aug)
             y_aug = y_aug.flatten()
-            #x_aug, y_aug = np.array(x_aug), np.array(y_aug)
-    
+                
     elif aug_method == 'cGAN':
         
         x_aug = np.load(f'/home/abidhasan/Documents/DA_Project/Deap/Data/cGAN_generated_data/{label_name}/{aug_factor}_X.npy')
@@ -112,5 +105,5 @@ if __name__ == "__main__":
     try :
         x_aug, labels_to_save = augment(aug_factor, aug_method, label_name, x, y)
     except: 
-        print("Some thing is wrong with the Augmente, Probably the augmentation factor, x, y and the aug_method is not declared.")
+        print("Some thing is wrong with the Augmenter, Probably the augmentation factor, x, y and the aug_method is not declared.")
 
