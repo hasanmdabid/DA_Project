@@ -11,3 +11,8 @@ synthetic_data_generator.py
 BioVid/datasets/
 BioVid/results/
 Opportunity/Related_paper/
+Results/
+HAR/data/
+Opportunity/unnecessary/
+Deap/unnecessary/
+picture/
