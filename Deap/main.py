@@ -60,7 +60,7 @@ param = {"aug_method": ["jitter", "scaling", "rotation",  "slicing", "permutatio
             "optimizer" : 'Adam',
             "dropout_rate" : 0.4,
             "batch_size" : 32,
-            "epochs" : 100,
+            "epochs" : 300,
             "verbose" : 2,
             "modelname" : 'CONV2D'          
          }

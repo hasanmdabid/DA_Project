@@ -1,4 +1,15 @@
 # pylint: disable-all
+
+"""
+In this script we perform Human activities classification on HAR dataset.
+To use theis repository for HAR dataset, one must have to download the "HAR" dataset from the following link. 
+https://archive.ics.uci.edu/dataset/240/human+activity+recognition+using+smartphones
+The dataset is public and anyone can use it without any prior consent. 
+To read the dataset, please save the csv files under teh following folders "./HAR/data/"
+In our study, we used the raw signal from each sensor channels.  
+"""
+
+
 from numpy import dstack
 from pandas import read_csv, DataFrame
 import numpy as np
@@ -147,9 +158,9 @@ def deepconvlstm(activation, init_mode, optimizer, dropout_rate, n_timesteps, n_
 # save results to csv file
 
 
-def save_results_to_csv(results, path='./results/har.csv'):
-    if not os.path.exists('./results/'):
-        os.makedirs('./results/')
+def save_results_to_csv(results, path='/home/abidhasan/Documents/DA_Project/HAR/results/har.csv'):
+    if not os.path.exists('/home/abidhasan/Documents/DA_Project/HAR/results/'):
+        os.makedirs('/home/abidhasan/Documents/DA_Project/HAR/results/')
 
     file = Path(path)
 
@@ -164,8 +175,7 @@ def save_results_to_csv(results, path='./results/har.csv'):
 # In this experiment we are considering all the methods except generative
 # ['jitter', 'scaling', 'rotation', 'permutation', 'magnitude_warp', 'slicing', 'time_warp', 'window_warp', 'spawner', 'random_guided_warp', 'discriminative_guided_warp', 'cGAN']
 factors = [0.2, 0.4, 0.6, 0.8, 1, 2, 3, 4]
-methods = ['jitter', 'scaling', 'rotation', 'permutation', 'magnitude_warp', 'slicing',
-           'time_warp', 'window_warp', 'spawner', 'random_guided_warp', 'discriminative_guided_warp', 'cGAN']
+methods = ['jitter', 'scaling', 'rotation', 'permutation', 'magnitude_warp', 'slicing', 'time_warp', 'window_warp', 'spawner', 'random_guided_warp', 'discriminative_guided_warp', 'cGAN']
 
 # load dataset
 trainX, trainy, testX, testy = load_dataset()
@@ -185,7 +195,7 @@ nr_samples, n_timesteps, n_features, n_channels = trainX.shape[0], trainX.shape[
 activationConv = 'relu'
 activationMLP = 'relu'
 verbose = 2
-epochs = 100
+epochs = 300
 batch_size = 32
 # Specify How many times do you want to rerun the test
 num_repeats = 5

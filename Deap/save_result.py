@@ -6,11 +6,11 @@ def saveResultsCSV(label, aug_method, aug_factor, modelname, epochs, batch_size,
     from pathlib import Path
     from datetime import datetime
     
-    path = './Deap/results/'
+    path = '/home/abidhasan/Documents/DA_Project/Deap/results/'
     if not os.path.exists(path):
         os.makedirs(path)
 
-    fileString = './Deap/results/deap.csv'
+    fileString = '/home/abidhasan/Documents/DA_Project/Deap/results/deap.csv'
     file = Path(fileString)
 
     now = datetime.now()

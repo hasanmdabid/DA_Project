@@ -1,4 +1,7 @@
 # pylint: disable-all
+# In this Script you can choose two basic models (I.E Roggen model or Frederic Model). For our study we selected 
+# the Roggen model as the base model for the Data augmnenation paper. 
+
 import pandas as pd
 import numpy as np
 import load_data

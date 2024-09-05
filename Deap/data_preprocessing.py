@@ -1,5 +1,19 @@
 # pylint: disable-all
 
+"""
+This Script wil preprocess the DEAP dataset. 
+The DEAP dataset is a publicly available but to use it the user have to sign an End User License Agreement. 
+The details of the License Agreement and how to access the dataset are available in the following website: 
+https://www.eecs.qmul.ac.uk/mmv/datasets/deap/
+
+To use the script user have to save the data in the following directory:
+"/home/abidhasan/Documents/DA_Project/Deap/Data/"
+
+The details of the data processing instructions are available in the following script below.
+Westrongly advise the user to read the documentation.
+"""
+
+
 def data_pre_pro_with_scalling():
     import pickle
     import pandas as pd
@@ -44,8 +58,7 @@ def data_pre_pro_with_scalling():
         labels.append(trial['labels'])
         data.append(trial['data'])
     
-    
-    path = '.picture/'
+    path = '/home/abidhasan/Documents/DA_Project/Deap/picture/'
     if not os.path.exists(path):
         os.makedirs(path)
     

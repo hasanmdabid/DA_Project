@@ -99,8 +99,8 @@ def prepare_data(X, y, subjects, param):
 
         # convert from one-hot encoding
         y_for_aug = np.argmax(y, axis= 1) # 1D (1293)
-        np.save('/home/abidhasan/Documents/DA_Project/preprocessed_data_for_GAN_Design/painmonit/X', X_for_aug)
-        np.save('/home/abidhasan/Documents/DA_Project/preprocessed_data_for_GAN_Design/painmonit/y', y_for_aug)
+        np.save('/home/abidhasan/Documents/DA_Project/preprocessed_pain_data_for_GAN_Design/painmonit/X', X_for_aug)
+        np.save('/home/abidhasan/Documents/DA_Project/preprocessed_pain_data_for_GAN_Design/painmonit/y', y_for_aug)
         
         indices_0 = np.where(y_for_aug == 0)[0]
         indices_1 = np.where(y_for_aug == 1)[0]
@@ -130,7 +130,7 @@ def prepare_data(X, y, subjects, param):
         """
 
 
-        if param["aug_method"] == "crop" or param["aug_method"] == "tw" or param["aug_method"] == "jitter" or  param["aug_method"] == "convolve" or param["aug_method"] == "rotation" or param["aug_method"] == "quantize" or param["aug_method"] == "drift":
+        if param["aug_method"] == "crop" or param["aug_method"] == "jitter" or  param["aug_method"] == "convolve" or param["aug_method"] == "rotation" or param["aug_method"] == "quantize" or param["aug_method"] == "drift":
 
             # To use "TSAUG" python DA library the infut format of x and y is 3D (Nr. of samples, Timesstamp, channels)
             # extend Dimension axis
@@ -146,8 +146,6 @@ def prepare_data(X, y, subjects, param):
             if param["aug_factor"] <1:
                 if param["aug_method"] == "crop" or param["aug_method"] == "slicing":
                     augmenter = (Crop(size= 1408) * 1 )
-                elif param["aug_method"] == "tw":
-                    augmenter = (TimeWarp() * 1 )
                 elif param["aug_method"] == "jitter":
                     augmenter = (AddNoise(loc=0.0, scale=0.2, distr='gaussian', kind='additive') * 1)
                 elif param["aug_method"] == "convolve" or param["aug_method"] == "MW":
@@ -171,8 +169,6 @@ def prepare_data(X, y, subjects, param):
                     augmenter = (Crop(size= 1408) * param["aug_factor"])
                 elif param["aug_method"] == "jitter":
                     augmenter = (AddNoise(loc=0.0, scale=0.2, distr='gaussian', kind='additive') * param["aug_factor"])
-                elif param["aug_method"] == "tw":
-                    augmenter = (TimeWarp() * param["aug_factor"])
                 elif param["aug_method"] == "convolve" or param["aug_method"] == "MW":
                     augmenter = (Convolve(window="flattop", size=16) * param["aug_factor"])
                 elif param["aug_method"] == "rotation":
@@ -328,7 +324,7 @@ def prepare_data(X, y, subjects, param):
             x_aug = np.expand_dims(x_aug, axis= -1) #4D
             y_aug = to_categorical(y_aug)           #2D (After performing One hot encode)
             
-        elif param["aug_method"] == "GAN":
+        elif param["aug_method"] == "cGAN":
             mask = int(param["aug_factor"] * x_minor.shape[0])
             subjects_aug = subjects[:mask]
             x_aug = np.load(f'/home/abidhasan/Documents/DA_Project/BioVid/datasets/cGAN_Generated_data/painmonit/{aug_factor}_X.npy')
@@ -453,7 +449,7 @@ if __name__ == "__main__":
     # Deep learning
     param.update({"epochs": 100, "bs": 32, "lr": 0.0001, "smooth": 256, "resample": 256, "dense_out": 100, "minmax_norm": True})
     for clf in [mlp]:
-        for aug_method in ["None", "crop", "jitter", "tw", "convolve", "rotation", "quantize", "drift", "TW", "WW" "RGW", "DGW", "spawner", "permutation", "GAN"]:
+        for aug_method in ["None", "crop", "jitter", "convolve", "rotation", "quantize", "drift", "TW", "WW" "RGW", "DGW", "spawner", "permutation", "cGAN"]:
             for aug_factor in [None, 0.2, 0.4, 0.6, 0.8, 1, 2, 3, 4]:
                 try:
                     param["aug_factor"] = aug_factor

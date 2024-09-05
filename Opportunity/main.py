@@ -1,10 +1,8 @@
-# This projects will highlight the comparative analysis of GANS performance for both univariate and multivariate dataset
+# This projects will highlight the comparative analysis of Augmentation Algorithms performance for both univariate and multivariate dataset
 # ## 1st step will be to design an CNN model for the opportunity dataset and check the performance of the model without
 # data augmentation.
 #    ### 1. Preprocessing the dataset
-#    ### 2. segmentation of the dataset
-# ## 2nd step will be to use existing augmentation method to generate synthetic data and see the performance.
-# ## 3rd step will be to formulate a unique evaluation matrix for the Augmentation methods (GANS)
+#    ### 2. Performance Evaluation of the Augmentation Algorithms on the selected dataset.
 
 # pylint: disable-all
 import gc
@@ -20,11 +18,13 @@ from nn_models import *
 # --------- Spliting the Data into Train and test split.
 #  ['jitter', 'scaling', 'rotation', 'permutation', 'magnitude_warp', 'slicing', 'time_warp', 'window_warp', 'spawner','random_guided_warp', 'discriminative_guided_warp', 'cGAN']
 factors = [0.2, 0.4, 0.6, 0.8, 0.8, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-families = ['jitter', 'scaling', 'rotation', 'permutation', 'magnitude_warp', 'slicing', 'time_warp', 'window_warp', 'spawner','random_guided_warp', 'discriminative_guided_warp']
+families = ['jitter', 'scaling', 'rotation', 'permutation', 'magnitude_warp', 'slicing',
+            'time_warp', 'window_warp', 'spawner', 'random_guided_warp', 'discriminative_guided_warp', 'cGAN']
 #looping over Factors 
 for factor in factors:
     #looping over Familiyes
     for family in families: 
+        print(f"Evaluating the Model for the Factor = {factor} and the Family = {family}")
         family, trainx, trainy, valx, valy, testx, testy = train_test_split.train_test_split(factor, family)
         method = family
         print('Unique Indices in train set:', np.unique(trainy))
@@ -54,13 +54,13 @@ for factor in factors:
         activationConv = 'relu'
         activationMLP = 'relu'
         verbose = 2
-        epochs = 60
+        epochs = 300
         batch_size = 100
         # ******************* Because if the window size if 32 = 4*8   ***********************
         n_steps, n_length = 4, 8
         
         # Specify How many times do you want to rerun the test
-        num_repeats = 2
+        num_repeats = 5
 
         # ---------------------Reshape the input according to the model------------------------------------------------
 

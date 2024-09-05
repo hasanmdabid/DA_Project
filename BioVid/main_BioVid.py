@@ -1,3 +1,14 @@
+"""
+This Script will preprocess the BioVid dataset. 
+The BioVid dataset is publicly available but to use it the user have to to sign a conscent form form the reponsible authority. 
+The details of the License Agreement and how to access the dataset are available in the following website: 
+https://www.nit.ovgu.de/BioVid.html
+
+To use the script user have to save the data in the following directory:
+"/home/abidhasan/Documents/DA_Project/BioVid/datasets/biovid/"
+
+"""
+
 # pylint: disable-all
 from enum import unique
 import os
@@ -103,8 +114,8 @@ def prepare_data(X, y, subjects, param):
 
         # convert from one-hot encoding
         y_for_aug = np.argmax(y, axis= 1) # 1D (3480,)
-        np.save('/home/abidhasan/Documents/DA_Project/preprocessed_data_for_GAN_Design/biovid/X', X_for_aug)
-        np.save('/home/abidhasan/Documents/DA_Project/preprocessed_data_for_GAN_Design/biovid/y', y_for_aug)
+        np.save('/home/abidhasan/Documents/DA_Project/preprocessed_pain_data_for_GAN_Design/biovid/X', X_for_aug)
+        np.save('/home/abidhasan/Documents/DA_Project/preprocessed_pain_data_for_GAN_Design/biovid/y', y_for_aug)
         
         unique_labels, counts = np.unique(y_for_aug, return_counts=True)
         # Display the total quantity of each label
@@ -338,7 +349,7 @@ def prepare_data(X, y, subjects, param):
                 else:
                     x_aug, y_aug = permutation(x_frac_aug, y_frac_aug) # shape ofx_frac_aug, y_frac_aug(3D,1D) and X_aug,y_aug is (3D, 1d).
             
-            elif param['aug_method'] == 'GAN':
+            elif param['aug_method'] == 'cGAN':
                 x_aug = np.load(f'/home/abidhasan/Documents/DA_Project/BioVid/datasets/cGAN_Generated_data/biovid/{aug_factor}_X.npy')
                 y_aug = np.load(f'/home/abidhasan/Documents/DA_Project/BioVid/datasets/cGAN_Generated_data/biovid/{aug_factor}_y.npy')
             
@@ -458,12 +469,12 @@ if __name__ == "__main__":
     print("\n")
 
        # Deep learning
-    param.update({"epochs": 100, "bs": 32, "lr": 0.0001, "smooth": 256, "resample": 256, "dense_out": 100, "minmax_norm": True})
+    param.update({"epochs": 300, "bs": 32, "lr": 0.0001, "smooth": 256, "resample": 256, "dense_out": 100, "minmax_norm": True})
     
     # [ "jitter", "rotation", "scaling", "magnitude_warping", "slicing", "TW", "WW",  "permutation", "RGW", "DGW", "spawner", "GAN"]
     for clf in [mlp]:
-        for aug_method in ["MW"]:
-            for aug_factor in [3, 4]:
+        for aug_method in ["jitter", "rotation", "scaling", "MW", "slicing", "TW", "WW",  "permutation", "RGW", "DGW", "spawner", "cGAN",]:
+            for aug_factor in [None, 0.2, 0.4, 0.6, 0.6, 0.8, 1, 2, 3, 4]:
                 
                 try:
                     param["aug_factor"] = aug_factor

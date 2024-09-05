@@ -3,6 +3,8 @@ We want to acknowledge the contribution of Iwana and Uchida's on the scientific 
 time series classification with neural networks. We modifid the code for the moltimodal time series classification. 
 """
 
+# pylint: disable-all
+
 import os
 import sys
 import random

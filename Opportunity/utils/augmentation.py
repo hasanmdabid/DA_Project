@@ -2,8 +2,10 @@
 We want to acknowledge the contribution of Iwana and Uchida's on the scientific paper titled as "An empirical survey of data augmentation for
 time series classification with neural networks. We modifid the code for the moltimodal time series classification. 
 """
+# pylint: disable-all
 import numpy as np
 from tqdm import tqdm
+import utils.dtw as dtw
 
 def jitter(x, sigma=0.03):
     return x + np.random.normal(loc=0., scale=sigma, size=x.shape)
@@ -131,8 +133,7 @@ def spawner(x, labels, slope_constraint="symmetric", sigma=0.05, verbose=0):
     return jitter(ret, sigma=sigma)
 
 def wdba(x, labels, batch_size=6, slope_constraint="symmetric", use_window=True, verbose=0):
-    import utils.dtw as dtw
-    
+        
     if use_window:
         window = np.ceil(x.shape[1] / 10.).astype(int)
     else:

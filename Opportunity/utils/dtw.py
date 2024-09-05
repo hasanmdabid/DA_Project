@@ -1,3 +1,5 @@
+# pylint: disable-all
+# We want to acknowledge the main Brain Iwana for sharing this code 
 __author__ = 'Brian Iwana'
 
 import numpy as np
