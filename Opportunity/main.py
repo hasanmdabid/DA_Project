@@ -1,3 +1,7 @@
+# To use theis repository for Opportunity dataset one must have to download the "opportunity" dataset from the following link.
+# https://archive.ics.uci.edu/dataset/226/opportunity+activity+recognition
+# The dataset is public and anyone can use it without any prior consent.
+# To read the dataset, please save the csv files under teh following folders "./opportunity/Data/{x}.csv"
 # This projects will highlight the comparative analysis of Augmentation Algorithms performance for both univariate and multivariate dataset
 # ## 1st step will be to design an CNN model for the opportunity dataset and check the performance of the model without
 # data augmentation.
@@ -18,8 +22,7 @@ from nn_models import *
 # --------- Spliting the Data into Train and test split.
 #  ['jitter', 'scaling', 'rotation', 'permutation', 'magnitude_warp', 'slicing', 'time_warp', 'window_warp', 'spawner','random_guided_warp', 'discriminative_guided_warp', 'cGAN']
 factors = [0.2, 0.4, 0.6, 0.8, 0.8, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-families = ['jitter', 'scaling', 'rotation', 'permutation', 'magnitude_warp', 'slicing',
-            'time_warp', 'window_warp', 'spawner', 'random_guided_warp', 'discriminative_guided_warp', 'cGAN']
+families = ['jitter', 'scaling', 'rotation', 'permutation', 'magnitude_warp', 'slicing','time_warp', 'window_warp', 'spawner', 'random_guided_warp', 'discriminative_guided_warp', 'cGAN']
 #looping over Factors 
 for factor in factors:
     #looping over Familiyes

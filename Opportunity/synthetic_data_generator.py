@@ -30,7 +30,7 @@ def GAN_generator(factor):
     # ----------------------------------------------HAR OPPO-----------------------------------------------------------------
     # Load GAN model for HAR-OPPO model
     model_har = load_model(
-        '/home/abidhasan/Documents/DA_Project/Opportunity/CGAN_500_epochs_32Batch_Minority_withoutBatchNormalization_labelSmoothing_conv2d_lstm.h5')
+        '/home/abidhasan/Documents/DA_Project/Opportunity/oppo_cGAN/results/trained_model/CGAN_500_epochs_32Batch_Minority_withoutBatchNormalization_labelSmoothing_conv2d_lstm.h5')
     #model_har = load_model('CGAN_500_epochs_32Batch_Minority_withoutBatchNormalization_labelSmoothing_conv2d_lstm.h5')
     latent_points_har, _ = generate_latent_points(latent_dim, n_samples, n_classes)  # Input (Latent Point Dimension, n_Samples) .
     # specify labels - generate 10 sets of labels each gaping from 0 to 9
@@ -40,7 +40,7 @@ def GAN_generator(factor):
     print("Shape of Har Labels:", labels_har.shape)
     print(labels_har)
     from joblib import load
-    scaler = load('/home/abidhasan/Documents/DA_Project/Opportunity/minmax_scaler.bin')
+    scaler = load('/home/abidhasan/Documents/DA_Project/Opportunity/oppo_cGAN/minmax_scaler_oppo.bin')
 
     # Generate Har Data
     X_har = model_har.predict([latent_points_har, labels_har])

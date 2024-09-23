@@ -10,7 +10,6 @@
 import numpy as np
 from tsaug import TimeWarp, Crop, Quantize, Drift, Reverse, Convolve, Pool, AddNoise
 from DTW import *
-import synthetic_data_generator
 
 # -----------------Creating the augmenter class---------------------------------------------------
 def tsaug(aug_method, factor):

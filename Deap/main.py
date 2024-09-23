@@ -1,4 +1,7 @@
 # pylint: disable-all
+# This script will evaluate the 12 data augmentation techniques on DEAP dataset. 
+# While running this script, the user have to selec the lavel (Either Valane or Arousal) to evaluate each methods
+# The augmatation factor range is selected from 0.2 to 4. 
 
 from sklearn.metrics import confusion_matrix
 from tqdm import tqdm

@@ -4,40 +4,49 @@
 
 import pandas as pd
 import numpy as np
-import load_data
 import windowed_numpy_3Darray
 import aug_SMOTE
 import aug_TSAUG
 import synthetic_data_generator
 import augmenter
 
+
+def load_data(x):
+    import pandas as pd
+    x = pd.read_csv(
+        f'~/Documents/DA_Project/Opportunity/Data/{x}.csv', dtype='float32')
+    # Replacing the 'Nan' values with 0 in the dataset
+    x = x.fillna(method='ffill')
+    return x
+
+
 def train_test_split(factor, family):
     global trainx, trainy, testx, testy, valx, valy
     
-    s1r1 = load_data.load_data("S1-ADL1")
-    s1r2 = load_data.load_data("S1-ADL2")
-    s1r3 = load_data.load_data("S1-ADL3")
-    s1r4 = load_data.load_data("S1-ADL4")
-    s1r5 = load_data.load_data("S1-ADL5")
-    s1_drill = load_data.load_data("S1-Drill")
-    s2r1 = load_data.load_data("S2-ADL1")
-    s2r2 = load_data.load_data("S2-ADL2")
-    s2r3 = load_data.load_data("S2-ADL3")
-    s2r4 = load_data.load_data("S2-ADL4")
-    s2r5 = load_data.load_data("S2-ADL5")
-    s2_drill = load_data.load_data("S2-Drill")
-    s3r1 = load_data.load_data("S3-ADL1")
-    s3r2 = load_data.load_data("S3-ADL2")
-    s3r3 = load_data.load_data("S3-ADL3")
-    s3r4 = load_data.load_data("S3-ADL4")
-    s3r5 = load_data.load_data("S3-ADL5")
-    s3_drill = load_data.load_data("S1-Drill")
-    s4r1 = load_data.load_data("S4-ADL1")
-    s4r2 = load_data.load_data("S4-ADL2")
-    s4r3 = load_data.load_data("S4-ADL3")
-    s4r4 = load_data.load_data("S4-ADL4")
-    s4r5 = load_data.load_data("S4-ADL5")
-    s4_drill = load_data.load_data("S4-Drill")
+    s1r1 = load_data("S1-ADL1")
+    s1r2 = load_data("S1-ADL2")
+    s1r3 = load_data("S1-ADL3")
+    s1r4 = load_data("S1-ADL4")
+    s1r5 = load_data("S1-ADL5")
+    s1_drill = load_data("S1-Drill")
+    s2r1 = load_data("S2-ADL1")
+    s2r2 = load_data("S2-ADL2")
+    s2r3 = load_data("S2-ADL3")
+    s2r4 = load_data("S2-ADL4")
+    s2r5 = load_data("S2-ADL5")
+    s2_drill = load_data("S2-Drill")
+    s3r1 = load_data("S3-ADL1")
+    s3r2 = load_data("S3-ADL2")
+    s3r3 = load_data("S3-ADL3")
+    s3r4 = load_data("S3-ADL4")
+    s3r5 = load_data("S3-ADL5")
+    s3_drill = load_data("S1-Drill")
+    s4r1 = load_data("S4-ADL1")
+    s4r2 = load_data("S4-ADL2")
+    s4r3 = load_data("S4-ADL3")
+    s4r4 = load_data("S4-ADL4")
+    s4r5 = load_data("S4-ADL5")
+    s4_drill = load_data("S4-Drill")
 
     def column_notation(data):
         data.columns = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17',
